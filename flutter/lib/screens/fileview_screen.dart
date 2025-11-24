@@ -19,6 +19,11 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
   bool _isLoading = false;
   String _currentFolderName = '내 파일';
 
+  // 삭제 모드 관련
+  bool _isDeleteMode = false;
+  Set<String> _selectedPdfIds = {};
+  Set<String> _selectedFolderIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -167,99 +172,6 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
     }
   }
 
-  // 폴더 삭제 확인
-  void _confirmDeleteFolder(Folder folder) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('폴더 삭제'),
-        content: Text('${folder.name} 폴더를 삭제하시겠습니까?\n(폴더 내 파일은 루트로 이동됩니다)'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              
-              try {
-                await ApiService.deleteFolder(folder.id);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('폴더가 삭제되었습니다')),
-                );
-                _loadData();
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('폴더 삭제 실패: $e')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('삭제'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // PDF 삭제 확인
-  Future<void> _confirmDeletePDF(PDFFile pdf) async {
-    // 먼저 사용 중인 채팅방 수 확인
-    final usage = await ApiService.checkPDFUsage(pdf.id);
-    final linkedRoomsCount = usage?['linked_rooms_count'] ?? 0;
-
-    if (!mounted) return;
-
-    // 경고 메시지 구성
-    String warningMessage = '${pdf.originalFilename}을(를) 삭제하시겠습니까?';
-    if (linkedRoomsCount > 0) {
-      warningMessage += '\n\n⚠️ 주의: 이 PDF는 현재 $linkedRoomsCount개의 채팅방에서 사용 중입니다.\n삭제하면 해당 채팅방들에서 PDF 기반 학습이 불가능해집니다.';
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('파일 삭제'),
-        content: Text(warningMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-
-              try {
-                final result = await ApiService.deletePDF(pdf.id);
-                if (result != null) {
-                  final unlinkedCount = result['linked_rooms_count'] ?? 0;
-                  String message = '파일이 삭제되었습니다';
-                  if (unlinkedCount > 0) {
-                    message += ' ($unlinkedCount개 채팅방 연결 해제됨)';
-                  }
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(message)),
-                  );
-                  _loadData();
-                } else {
-                  throw Exception('삭제 실패');
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('파일 삭제 실패: $e')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('삭제'),
-          ),
-        ],
-      ),
-    );
-  }
-
   // 폴더 진입
   void _enterFolder(Folder folder) {
     setState(() {
@@ -276,6 +188,126 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
       _currentFolderName = '내 파일';
     });
     _loadData();
+  }
+
+  // PDF 폴더 이동 다이얼로그
+  Future<void> _showMovePDFDialog(PDFFile pdf) async {
+    // 이동 가능한 폴더 목록 (루트 + 다른 폴더들)
+    final availableFolders = [
+      null, // 루트
+      ..._folders.where((f) => f.id != pdf.folderId),
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('폴더 이동'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${pdf.originalFilename}을(를) 이동할 폴더를 선택하세요'),
+            SizedBox(height: 16),
+            ...availableFolders.map((folder) => ListTile(
+              leading: Icon(
+                folder == null ? Icons.home : Icons.folder,
+                color: folder == null ? Colors.blue : Colors.amber,
+              ),
+              title: Text(folder?.name ?? '루트 폴더'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _movePDF(pdf, folder?.id);
+              },
+            )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('취소'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // PDF 이동 실행
+  Future<void> _movePDF(PDFFile pdf, String? targetFolderId) async {
+    try {
+      final result = await ApiService.movePDF(pdf.id, targetFolderId);
+      if (result != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('파일이 이동되었습니다')),
+        );
+        _loadData();
+      } else {
+        throw Exception('이동 실패');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('파일 이동 실패: $e')),
+      );
+    }
+  }
+
+  // 선택 삭제 실행
+  Future<void> _deleteSelected() async {
+    if (_selectedPdfIds.isEmpty && _selectedFolderIds.isEmpty) return;
+
+    final totalCount = _selectedPdfIds.length + _selectedFolderIds.length;
+
+    // 확인 다이얼로그
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('삭제 확인'),
+        content: Text('선택한 $totalCount개 항목을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      int successCount = 0;
+
+      // PDF 삭제
+      for (final pdfId in _selectedPdfIds) {
+        final result = await ApiService.deletePDF(pdfId);
+        if (result != null) successCount++;
+      }
+
+      // 폴더 삭제
+      for (final folderId in _selectedFolderIds) {
+        final success = await ApiService.deleteFolder(folderId);
+        if (success) successCount++;
+      }
+
+      setState(() {
+        _selectedPdfIds.clear();
+        _selectedFolderIds.clear();
+        _isDeleteMode = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$successCount개 항목이 삭제되었습니다')),
+      );
+
+      _loadData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('삭제 실패: $e')),
+      );
+    }
   }
 
   @override
@@ -295,15 +327,42 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
+          if (_isDeleteMode)
+            // 삭제 모드일 때
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: _selectedPdfIds.isEmpty && _selectedFolderIds.isEmpty
+                  ? null
+                  : _deleteSelected,
+              tooltip: '선택 삭제',
+            )
+          else
+            // 일반 모드일 때
+            ...[
+              IconButton(
+                icon: Icon(Icons.create_new_folder),
+                onPressed: _showCreateFolderDialog,
+                tooltip: '폴더 생성',
+              ),
+              IconButton(
+                icon: Icon(Icons.upload_file),
+                onPressed: _uploadPDF,
+                tooltip: 'PDF 업로드',
+              ),
+            ],
+          // 삭제 모드 토글 버튼
           IconButton(
-            icon: Icon(Icons.create_new_folder),
-            onPressed: _showCreateFolderDialog,
-            tooltip: '폴더 생성',
-          ),
-          IconButton(
-            icon: Icon(Icons.upload_file),
-            onPressed: _uploadPDF,
-            tooltip: 'PDF 업로드',
+            icon: Icon(_isDeleteMode ? Icons.close : Icons.delete_outline),
+            onPressed: () {
+              setState(() {
+                _isDeleteMode = !_isDeleteMode;
+                if (!_isDeleteMode) {
+                  _selectedPdfIds.clear();
+                  _selectedFolderIds.clear();
+                }
+              });
+            },
+            tooltip: _isDeleteMode ? '취소' : '삭제 모드',
           ),
         ],
       ),
@@ -380,16 +439,43 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
 
   // 폴더 카드
   Widget _buildFolderCard(Folder folder) {
+    final isSelected = _selectedFolderIds.contains(folder.id);
+
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () => _enterFolder(folder),
-        onLongPress: () => _confirmDeleteFolder(folder),
+        onTap: () {
+          if (_isDeleteMode) {
+            setState(() {
+              if (isSelected) {
+                _selectedFolderIds.remove(folder.id);
+              } else {
+                _selectedFolderIds.add(folder.id);
+              }
+            });
+          } else {
+            _enterFolder(folder);
+          }
+        },
         child: Padding(
           padding: EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.folder, size: 40, color: Colors.amber),
+              if (_isDeleteMode)
+                Checkbox(
+                  value: isSelected,
+                  onChanged: (checked) {
+                    setState(() {
+                      if (checked == true) {
+                        _selectedFolderIds.add(folder.id);
+                      } else {
+                        _selectedFolderIds.remove(folder.id);
+                      }
+                    });
+                  },
+                )
+              else
+                Icon(Icons.folder, size: 40, color: Colors.amber),
               SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -410,7 +496,8 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey),
+              if (!_isDeleteMode)
+                Icon(Icons.chevron_right, color: Colors.grey),
             ],
           ),
         ),
@@ -420,23 +507,53 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
 
   // PDF 카드
   Widget _buildPDFCard(PDFFile pdf) {
+    final isSelected = _selectedPdfIds.contains(pdf.id);
+
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PDFViewerScreen(pdfFile: pdf),
-            ),
-          );
+          if (_isDeleteMode) {
+            setState(() {
+              if (isSelected) {
+                _selectedPdfIds.remove(pdf.id);
+              } else {
+                _selectedPdfIds.add(pdf.id);
+              }
+            });
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PDFViewerScreen(pdfFile: pdf),
+              ),
+            );
+          }
         },
-        onLongPress: () => _confirmDeletePDF(pdf),
+        onLongPress: () {
+          if (!_isDeleteMode) {
+            _showMovePDFDialog(pdf);
+          }
+        },
         child: Padding(
           padding: EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.picture_as_pdf, size: 40, color: Colors.red),
+              if (_isDeleteMode)
+                Checkbox(
+                  value: isSelected,
+                  onChanged: (checked) {
+                    setState(() {
+                      if (checked == true) {
+                        _selectedPdfIds.add(pdf.id);
+                      } else {
+                        _selectedPdfIds.remove(pdf.id);
+                      }
+                    });
+                  },
+                )
+              else
+                Icon(Icons.picture_as_pdf, size: 40, color: Colors.red),
               SizedBox(width: 16),
               Expanded(
                 child: Column(
