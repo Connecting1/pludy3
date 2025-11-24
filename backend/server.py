@@ -656,33 +656,77 @@ async def list_pdfs(
     pdfs = query.order_by(models.PDFFile.uploaded_at.desc()).all()
     return pdfs
 
+@app.get("/api/pdf/{pdf_id}/usage")
+async def check_pdf_usage(
+    pdf_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """PDF 파일 사용 중인 채팅방 수 확인"""
+    pdf = db.query(models.PDFFile).filter(
+        models.PDFFile.id == pdf_id,
+        models.PDFFile.user_id == current_user.id
+    ).first()
+
+    if not pdf:
+        raise HTTPException(status_code=404, detail="PDF not found")
+
+    # 해당 PDF를 사용하는 채팅방 개수 확인
+    linked_rooms_count = db.query(models.ChatRoom).filter(
+        models.ChatRoom.pdf_id == pdf_id,
+        models.ChatRoom.user_id == current_user.id
+    ).count()
+
+    return {
+        "pdf_id": pdf_id,
+        "filename": pdf.original_filename,
+        "linked_rooms_count": linked_rooms_count
+    }
+
 @app.delete("/api/pdf/{pdf_id}")
 async def delete_pdf(
     pdf_id: str,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    """PDF 파일 삭제"""
+    """PDF 파일 삭제 (연결된 채팅방 정리)"""
     pdf = db.query(models.PDFFile).filter(
         models.PDFFile.id == pdf_id,
         models.PDFFile.user_id == current_user.id
     ).first()
-    
+
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
-    
+
+    # 해당 PDF를 사용하는 채팅방 찾기
+    linked_rooms = db.query(models.ChatRoom).filter(
+        models.ChatRoom.pdf_id == pdf_id,
+        models.ChatRoom.user_id == current_user.id
+    ).all()
+
+    linked_room_count = len(linked_rooms)
+
+    # 연결된 채팅방들의 pdf_id를 null로 설정
+    for room in linked_rooms:
+        room.pdf_id = None
+
+    # RAG 시스템에서 삭제
     rag_system.delete_pdf_from_collection(current_user.id, pdf_id)
 
     # 실제 파일 삭제
     if os.path.exists(pdf.file_path):
         os.remove(pdf.file_path)
-    
+
     # DB에서 삭제
     db.delete(pdf)
     db.commit()
-    
-    print(f"✅ PDF 삭제: {pdf.original_filename}")
-    return {"status": "success", "message": "PDF가 삭제되었습니다"}
+
+    print(f"✅ PDF 삭제: {pdf.original_filename} (연결된 채팅방: {linked_room_count}개)")
+    return {
+        "status": "success",
+        "message": "PDF가 삭제되었습니다",
+        "linked_rooms_count": linked_room_count
+    }
 
 @app.put("/api/pdf/{pdf_id}/move")
 async def move_pdf(
