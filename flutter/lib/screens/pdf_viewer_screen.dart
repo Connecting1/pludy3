@@ -1,6 +1,5 @@
 // lib/screens/fileview_screens/pdf_viewer_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:signature/signature.dart';
 import 'dart:ui' as ui;
@@ -154,89 +153,56 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       _selectedText = details.selectedText;
     });
 
-    // 텍스트가 선택되면 짧은 지연 후 메뉴 표시
-    if (details.selectedText != null && details.selectedText!.isNotEmpty) {
-      Future.delayed(Duration(milliseconds: 300), () {
-        if (_selectedText == details.selectedText && mounted) {
-          _showTextSelectionMenu();
-        }
-      });
-    }
+    // 바로 다이얼로그를 표시하지 않고, 텍스트 선택 상태만 저장
+    // 사용자가 텍스트 범위를 조정할 수 있도록 함
   }
 
-  // 텍스트 선택 메뉴 (네이티브 메뉴 스타일)
+  // 텍스트 선택 메뉴 (이제 AppBar 버튼으로 호출됨)
   void _showTextSelectionMenu() {
-    if (_selectedText == null || _selectedText!.isEmpty) return;
+    if (_selectedText == null || _selectedText!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('텍스트를 먼저 선택하세요')),
+      );
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) => Container(
-        padding: EdgeInsets.symmetric(vertical: 20),
+        padding: EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 선택된 텍스트 미리보기
+            Text('선택된 텍스트', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 12),
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 _selectedText!,
-                style: TextStyle(fontSize: 14),
-                maxLines: 3,
+                style: TextStyle(fontSize: 16),
+                maxLines: 5,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Divider(),
-            // 메뉴 옵션들
-            _menuItem(
-              icon: Icons.copy,
-              label: 'Copy',
-              onTap: () async {
-                if (_selectedText != null) {
-                  await Clipboard.setData(ClipboardData(text: _selectedText!));
-                }
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('텍스트가 복사되었습니다')),
-                );
-              },
-            ),
-            _menuItem(
-              icon: Icons.highlight,
-              label: 'Highlight',
-              onTap: () {
-                Navigator.pop(context);
-                // 형광펜 모드로 전환
-                setState(() {
-                  _isDrawingMode = true;
-                  _isHighlighterMode = true;
-                  _recreateSignatureController(
-                    color: _highlighterColor.withOpacity(0.5),
-                    width: _highlighterWidth,
-                  );
-                });
-              },
-            ),
-            Divider(),
-            // AI 학습 버튼 (강조)
-            _menuItem(
-              icon: Icons.school,
-              label: 'AI 학습',
-              color: Colors.blue,
-              onTap: () {
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
                 Navigator.pop(context);
                 _startLearningWithText(_selectedText!);
               },
+              icon: Icon(Icons.school),
+              label: Text('이것으로 학습하기'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                minimumSize: Size(double.infinity, 50),
+              ),
             ),
-            SizedBox(height: 10),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('취소'),
@@ -244,27 +210,6 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  // 메뉴 아이템 위젯
-  Widget _menuItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: color ?? Colors.black87),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
-          color: color ?? Colors.black87,
-        ),
-      ),
-      onTap: onTap,
     );
   }
 
@@ -416,6 +361,13 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           actions: [
+            // 텍스트가 선택되었을 때 AI 학습 버튼 표시
+            if (_selectedText != null && _selectedText!.isNotEmpty && !_isDrawingMode)
+              IconButton(
+                icon: Icon(Icons.school),
+                onPressed: _showTextSelectionMenu,
+                tooltip: 'AI 학습',
+              ),
             if (_isDrawingMode)
               IconButton(
                 icon: Icon(Icons.settings),
