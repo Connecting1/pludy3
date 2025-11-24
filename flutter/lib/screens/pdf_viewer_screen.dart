@@ -153,118 +153,51 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
     setState(() {
       _selectedText = details.selectedText;
     });
-
-    // 텍스트가 선택되면 짧은 지연 후 메뉴 표시
-    if (details.selectedText != null && details.selectedText!.isNotEmpty) {
-      Future.delayed(Duration(milliseconds: 300), () {
-        if (_selectedText == details.selectedText && mounted) {
-          _showTextSelectionMenu();
-        }
-      });
-    }
   }
 
-  // 텍스트 선택 메뉴 (네이티브 메뉴 스타일)
+  // 텍스트 선택 메뉴
   void _showTextSelectionMenu() {
     if (_selectedText == null || _selectedText!.isEmpty) return;
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Column(
+      builder: (context) => AlertDialog(
+        title: Text('AI 학습'),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 선택된 텍스트 미리보기
+            Text('선택한 텍스트로 학습을 시작하시겠습니까?'),
+            SizedBox(height: 12),
             Container(
-              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 _selectedText!,
                 style: TextStyle(fontSize: 14),
-                maxLines: 3,
+                maxLines: 5,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Divider(),
-            // 메뉴 옵션들
-            _menuItem(
-              icon: Icons.copy,
-              label: 'Copy',
-              onTap: () async {
-                if (_selectedText != null) {
-                  await Clipboard.setData(ClipboardData(text: _selectedText!));
-                }
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('텍스트가 복사되었습니다')),
-                );
-              },
-            ),
-            _menuItem(
-              icon: Icons.highlight,
-              label: 'Highlight',
-              onTap: () {
-                Navigator.pop(context);
-                // 형광펜 모드로 전환
-                setState(() {
-                  _isDrawingMode = true;
-                  _isHighlighterMode = true;
-                  _recreateSignatureController(
-                    color: _highlighterColor.withOpacity(0.5),
-                    width: _highlighterWidth,
-                  );
-                });
-              },
-            ),
-            Divider(),
-            // AI 학습 버튼 (강조)
-            _menuItem(
-              icon: Icons.school,
-              label: 'AI 학습',
-              color: Colors.blue,
-              onTap: () {
-                Navigator.pop(context);
-                _startLearningWithText(_selectedText!);
-              },
-            ),
-            SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('취소'),
-            ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _startLearningWithText(_selectedText!);
+            },
+            child: Text('시작'),
+          ),
+        ],
       ),
-    );
-  }
-
-  // 메뉴 아이템 위젯
-  Widget _menuItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: color ?? Colors.black87),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
-          color: color ?? Colors.black87,
-        ),
-      ),
-      onTap: onTap,
     );
   }
 
@@ -416,6 +349,12 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
           actions: [
+            if (_selectedText != null && _selectedText!.isNotEmpty && !_isDrawingMode)
+              IconButton(
+                icon: Icon(Icons.school),
+                onPressed: _showTextSelectionMenu,
+                tooltip: 'AI 학습',
+              ),
             if (_isDrawingMode)
               IconButton(
                 icon: Icon(Icons.settings),
