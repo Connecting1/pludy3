@@ -204,12 +204,24 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
   }
 
   // PDF 삭제 확인
-  void _confirmDeletePDF(PDFFile pdf) {
+  Future<void> _confirmDeletePDF(PDFFile pdf) async {
+    // 먼저 사용 중인 채팅방 수 확인
+    final usage = await ApiService.checkPDFUsage(pdf.id);
+    final linkedRoomsCount = usage?['linked_rooms_count'] ?? 0;
+
+    if (!mounted) return;
+
+    // 경고 메시지 구성
+    String warningMessage = '${pdf.originalFilename}을(를) 삭제하시겠습니까?';
+    if (linkedRoomsCount > 0) {
+      warningMessage += '\n\n⚠️ 주의: 이 PDF는 현재 $linkedRoomsCount개의 채팅방에서 사용 중입니다.\n삭제하면 해당 채팅방들에서 PDF 기반 학습이 불가능해집니다.';
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('파일 삭제'),
-        content: Text('${pdf.originalFilename}을(를) 삭제하시겠습니까?'),
+        content: Text(warningMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -218,13 +230,22 @@ class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObser
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              
+
               try {
-                await ApiService.deletePDF(pdf.id);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('파일이 삭제되었습니다')),
-                );
-                _loadData();
+                final result = await ApiService.deletePDF(pdf.id);
+                if (result != null) {
+                  final unlinkedCount = result['linked_rooms_count'] ?? 0;
+                  String message = '파일이 삭제되었습니다';
+                  if (unlinkedCount > 0) {
+                    message += ' ($unlinkedCount개 채팅방 연결 해제됨)';
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(message)),
+                  );
+                  _loadData();
+                } else {
+                  throw Exception('삭제 실패');
+                }
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('파일 삭제 실패: $e')),

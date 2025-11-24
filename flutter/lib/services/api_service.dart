@@ -364,8 +364,30 @@ class ApiService {
     }
   }
 
+  // PDF 사용 중인 채팅방 수 확인
+  static Future<Map<String, dynamic>?> checkPDFUsage(String pdfId) async {
+    try {
+      final headers = await AuthService.getAuthHeaders();
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/api/pdf/$pdfId/usage'),
+            headers: headers,
+          )
+          .timeout(Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('API Error (checkPDFUsage): $e');
+      return null;
+    }
+  }
+
   // PDF 삭제
-  static Future<bool> deletePDF(String pdfId) async {
+  static Future<Map<String, dynamic>?> deletePDF(String pdfId) async {
     try {
       final headers = await AuthService.getAuthHeaders();
       final response = await http
@@ -375,10 +397,14 @@ class ApiService {
           )
           .timeout(Duration(seconds: 10));
 
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return null;
+      }
     } catch (e) {
       print('API Error (deletePDF): $e');
-      return false;
+      return null;
     }
   }
 
