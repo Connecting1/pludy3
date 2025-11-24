@@ -9,10 +9,10 @@ class FileViewScreen extends StatefulWidget {
   const FileViewScreen({super.key});
 
   @override
-  State<FileViewScreen> createState() => _FileViewScreenState();
+  FileViewScreenState createState() => FileViewScreenState();
 }
 
-class _FileViewScreenState extends State<FileViewScreen> {
+class FileViewScreenState extends State<FileViewScreen> with WidgetsBindingObserver {
   List<Folder> _folders = [];
   List<PDFFile> _pdfs = [];
   String? _currentFolderId; // null이면 루트
@@ -22,6 +22,26 @@ class _FileViewScreenState extends State<FileViewScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 앱이 다시 포그라운드로 돌아올 때 새로고침
+    if (state == AppLifecycleState.resumed) {
+      _loadData();
+    }
+  }
+
+  // 외부에서 호출 가능한 새로고침 메서드
+  void refresh() {
     _loadData();
   }
 

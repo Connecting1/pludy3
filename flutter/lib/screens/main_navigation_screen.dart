@@ -15,14 +15,21 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 2; // 기본 인덱스를 chat(2번)으로 설정
+  final GlobalKey<FileViewScreenState> _fileViewKey = GlobalKey<FileViewScreenState>();
 
-  final List<Widget> _screens = [
-    const PlannerScreen(),
-    const QuizScreen(),
-    ChatScreen(), // ChatScreen은 const 생성자가 없음
-    const FileViewScreen(),
-    const SettingScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const PlannerScreen(),
+      const QuizScreen(),
+      ChatScreen(), // ChatScreen은 const 생성자가 없음
+      FileViewScreen(key: _fileViewKey),
+      const SettingScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +38,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
+          // 파일 탭(인덱스 3)으로 전환할 때 새로고침
+          if (index == 3) {
+            _fileViewKey.currentState?.refresh();
+          }
           setState(() {
             _currentIndex = index;
           });
