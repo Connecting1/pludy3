@@ -150,6 +150,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
         controller: _pdfViewerController,
         onTextSelectionChanged: _handleTextSelection,
         enableTextSelection: true,
+        canShowTextSelectionMenu: false,  // 기본 텍스트 선택 메뉴 비활성화
         canShowScrollHead: true,
         canShowScrollStatus: true,
         pageLayoutMode: PdfPageLayoutMode.continuous,
