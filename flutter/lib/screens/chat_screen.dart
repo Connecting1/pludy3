@@ -679,7 +679,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.picture_as_pdf, color: Colors.red),
+            icon: Icon(Icons.picture_as_pdf, color: colorScheme.error),
             onPressed: _isUploadingPdf ? null : _pickAndUploadPdf,
             tooltip: 'PDF 업로드',
           ),
@@ -690,6 +690,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 hintText: '메시지를 입력하세요...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 16,
@@ -702,9 +711,12 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           SizedBox(width: 8),
           CircleAvatar(
-            backgroundColor: _currentRoom != null ? Colors.blue : Colors.grey,
+            backgroundColor: _currentRoom != null ? colorScheme.primary : colorScheme.surfaceVariant,
             child: IconButton(
-              icon: Icon(Icons.send, color: Colors.white),
+              icon: Icon(
+                Icons.send,
+                color: _currentRoom != null ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+              ),
               onPressed: _currentRoom != null ? _sendMessage : null,
             ),
           ),
