@@ -708,6 +708,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildInputArea() {
     final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
 
     return Container(
       padding: EdgeInsets.all(8),
@@ -755,14 +756,18 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           SizedBox(width: 8),
-          CircleAvatar(
-            backgroundColor: _currentRoom != null ? colorScheme.primary : colorScheme.surfaceVariant,
-            child: IconButton(
-              icon: Icon(
-                Icons.send,
-                color: _currentRoom != null ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+          GestureDetector(
+            onTap: _currentRoom != null ? _sendMessage : null,
+            child: SvgPicture.asset(
+              'assets/images/send_icon.svg',
+              width: 40,
+              height: 40,
+              colorFilter: ColorFilter.mode(
+                _currentRoom != null
+                    ? (brightness == Brightness.dark ? Colors.white : Colors.black)
+                    : colorScheme.surfaceVariant,
+                BlendMode.srcIn,
               ),
-              onPressed: _currentRoom != null ? _sendMessage : null,
             ),
           ),
         ],
