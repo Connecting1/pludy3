@@ -111,9 +111,9 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 로고 이미지 (다크/라이트 모드 대응)
+              // 로고 이미지 (다크/라이트 모드)
               Image.asset(
-                'assets/images/logo.png', // 사용자가 제공한 로고
+                'assets/images/logo_dark.png', // 로고 경로
                 width: 200,
                 height: 200,
                 // 라이트 모드에서는 색상 반전 (선택사항)
