@@ -467,7 +467,7 @@ class _ChatScreenState extends State<ChatScreen> {
               width: 24,
               height: 24,
               colorFilter: ColorFilter.mode(
-                brightness == Brightness.dark ? Colors.white : Colors.black,
+                Colors.white,
                 BlendMode.srcIn,
               ),
             ),
