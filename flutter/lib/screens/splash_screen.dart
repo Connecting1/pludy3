@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/user_provider.dart';
 import '../screens/auth_screen.dart';
 import '../screens/main_navigation_screen.dart';
@@ -44,16 +45,14 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // 애니메이션 시작
-    _animationController.forward();
-
-    // 3초 후 로그인 상태 확인 및 화면 전환
-    _checkLoginAndNavigate();
+    // 애니메이션 시작 및 완료 후 자동 전환
+    _animationController.forward().then((_) {
+      _checkLoginAndNavigate();
+    });
   }
 
   Future<void> _checkLoginAndNavigate() async {
-    // 3초 대기 (애니메이션 표시)
-    await Future.delayed(Duration(seconds: 3));
+    // 애니메이션 완료 후 바로 실행 (대기 시간 없음)
 
     if (!mounted) return;
 
@@ -94,8 +93,10 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
     return Scaffold(
-      backgroundColor: Colors.black, // 검은색 배경
+      backgroundColor: brightness == Brightness.dark ? Colors.black : Colors.white,
       body: Center(
         child: AnimatedBuilder(
           animation: _animationController,
@@ -111,23 +112,22 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 로고 이미지 (다크/라이트 모드)
-              Image.asset(
-                'assets/images/logo_dark.png', // 로고 경로
+              // SVG 로고 (다크/라이트 모드)
+              SvgPicture.asset(
+                'assets/images/logo.svg',
                 width: 200,
                 height: 200,
-                // 라이트 모드에서는 색상 반전 (선택사항)
-                color: Theme.of(context).brightness == Brightness.light
-                    ? Colors.black
-                    : Colors.white,
-                colorBlendMode: BlendMode.srcIn,
+                colorFilter: ColorFilter.mode(
+                  brightness == Brightness.dark ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
               ),
               SizedBox(height: 24),
-              // 앱 이름 (선택사항)
+              // 앱 이름
               Text(
                 'Pludy',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: brightness == Brightness.dark ? Colors.white : Colors.black,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,
