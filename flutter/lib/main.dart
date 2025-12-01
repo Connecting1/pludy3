@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 // 팀원 import
 import 'screens/main_navigation_screen.dart';
 import 'screens/auth_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/auth.dart';
 import 'providers/theme_provider.dart';
 import 'providers/user_provider.dart';
@@ -189,8 +190,8 @@ class MyApp extends StatelessWidget {
               ),
             ),
 
-            // 팀원: AuthWrapper 사용
-            home: AuthWrapper(),
+            // 스플래시 화면을 첫 화면으로 설정
+            home: SplashScreen(),
 
             routes: {
               '/home': (context) => const MainNavigationScreen(),
