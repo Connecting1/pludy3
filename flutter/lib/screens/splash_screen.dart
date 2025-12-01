@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/user_provider.dart';
 import '../screens/auth_screen.dart';
 import '../screens/main_navigation_screen.dart';
@@ -44,16 +45,14 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // 애니메이션 시작
-    _animationController.forward();
-
-    // 3초 후 로그인 상태 확인 및 화면 전환
-    _checkLoginAndNavigate();
+    // 애니메이션 시작 및 완료 후 자동 전환
+    _animationController.forward().then((_) {
+      _checkLoginAndNavigate();
+    });
   }
 
   Future<void> _checkLoginAndNavigate() async {
-    // 3초 대기 (애니메이션 표시)
-    await Future.delayed(Duration(seconds: 3));
+    // 애니메이션 완료 후 바로 실행 (대기 시간 없음)
 
     if (!mounted) return;
 
@@ -94,8 +93,10 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
     return Scaffold(
-      backgroundColor: Colors.black, // 검은색 배경
+      backgroundColor: brightness == Brightness.dark ? Colors.black : Colors.white,
       body: Center(
         child: AnimatedBuilder(
           animation: _animationController,
@@ -123,11 +124,11 @@ class _SplashScreenState extends State<SplashScreen>
                 colorBlendMode: BlendMode.srcIn,
               ),
               SizedBox(height: 24),
-              // 앱 이름 (선택사항)
+              // 앱 이름
               Text(
                 'Pludy',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: brightness == Brightness.dark ? Colors.white : Colors.black,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,

@@ -442,6 +442,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_currentRoom?.title ?? 'AI Chat'),
@@ -460,7 +462,15 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.add_comment),
+            icon: SvgPicture.asset(
+              'assets/images/add_message_icon.svg',
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                brightness == Brightness.dark ? Colors.white : Colors.black,
+                BlendMode.srcIn,
+              ),
+            ),
             tooltip: '새 채팅',
             onPressed: _showNewChatDialog,
           ),
