@@ -123,7 +123,7 @@ class ApiService {
           'role': 'user',
           'phase': phase,
         }),
-      ).timeout(Duration(seconds: 10));
+      ).timeout(Duration(seconds: 60)); // AI 지식 수준 판단 시간 고려하여 60초로 증가
     } catch (e) {
       print('API Error (saveMessage): $e');
       throw e;
@@ -200,7 +200,7 @@ class ApiService {
             headers: headers,
             body: json.encode({'room_id': roomId, 'user_choice': userChoice}),
           )
-          .timeout(Duration(seconds: 10));
+          .timeout(Duration(seconds: 60)); // AI 처리 시간 고려하여 60초로 증가
 
       if (response.statusCode == 200) {
         return json.decode(response.body);

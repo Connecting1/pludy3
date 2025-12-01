@@ -581,18 +581,27 @@ def delete_user_account(
         db.query(models.ChatRoom).filter(models.ChatRoom.user_id == user_id).delete(synchronize_session=False)
         print(f"  - 채팅방 {len(room_ids)}개 삭제 완료")
 
-        # 4. ChromaDB에서 사용자의 PDF 데이터 삭제
+        # 4. 사용자의 모든 목표(goals) 삭제
+        deleted_goals = db.query(models.Goal).filter(models.Goal.user_id == user_id).delete(synchronize_session=False)
+        print(f"  - 목표 {deleted_goals}개 삭제 완료")
+
+        # 5. 사용자의 모든 일정(schedules) 삭제
+        deleted_schedules = db.query(models.Schedule).filter(models.Schedule.user_id == user_id).delete(synchronize_session=False)
+        print(f"  - 일정 {deleted_schedules}개 삭제 완료")
+
+        # 6. 사용자의 모든 퀴즈 삭제 (cascade로 question, answer도 함께 삭제됨)
+        deleted_quizzes = db.query(models.Quiz).filter(models.Quiz.user_id == user_id).delete(synchronize_session=False)
+        print(f"  - 퀴즈 {deleted_quizzes}개 삭제 완료")
+
+        # 7. ChromaDB에서 사용자의 컬렉션 삭제
         try:
-            collection = chroma_client.get_collection(name="pdf_documents")
-            # 사용자의 모든 문서 조회
-            results = collection.get(where={"user_id": user_id})
-            if results and results['ids']:
-                collection.delete(ids=results['ids'])
-                print(f"  - ChromaDB에서 {len(results['ids'])}개 문서 삭제 완료")
+            collection_name = f"user_{user_id}"
+            rag_system.client.delete_collection(name=collection_name)
+            print(f"  - ChromaDB 컬렉션 '{collection_name}' 삭제 완료")
         except Exception as e:
             print(f"  - ChromaDB 삭제 중 오류 (무시): {e}")
 
-        # 5. 사용자 계정 삭제
+        # 8. 사용자 계정 삭제
         db.delete(current_user)
         db.commit()
 
