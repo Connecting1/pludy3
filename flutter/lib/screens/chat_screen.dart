@@ -760,8 +760,8 @@ class _ChatScreenState extends State<ChatScreen> {
             onTap: _currentRoom != null ? _sendMessage : null,
             child: SvgPicture.asset(
               'assets/images/send_icon.svg',
-              width: 40,
-              height: 40,
+              width: 30,
+              height: 30,
               colorFilter: ColorFilter.mode(
                 _currentRoom != null
                     ? (brightness == Brightness.dark ? Colors.white : Colors.black)
