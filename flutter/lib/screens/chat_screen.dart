@@ -520,22 +520,25 @@ class _ChatScreenState extends State<ChatScreen> {
             top: 0,
             bottom: 0,
             width: MediaQuery.of(context).size.width * 0.75,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                    offset: Offset(2, 0),
+            child: Builder(
+              builder: (context) {
+                final colorScheme = Theme.of(context).colorScheme;
+                return Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(2, 0),
+                      ),
+                    ],
                   ),
-                ],
-              ),
               child: Column(
                 children: [
                   Container(
                     padding: EdgeInsets.all(16),
-                    color: Colors.blue.shade50,
+                    color: colorScheme.surfaceVariant,
                     child: Row(
                       children: [
                         if (_isDeleteMode)
@@ -544,7 +547,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           onChanged: (_) => _toggleSelectAll(),
                         )
                       else
-                        Icon(Icons.chat_bubble_outline, color: Colors.blue),
+                        Icon(Icons.chat_bubble_outline, color: colorScheme.primary),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -602,10 +605,10 @@ class _ChatScreenState extends State<ChatScreen> {
                                       },
                                     )
                                   : CircleAvatar(
-                                      backgroundColor: isSelected ? Colors.blue : Colors.grey.shade300,
+                                      backgroundColor: isSelected ? colorScheme.primary : colorScheme.surfaceVariant,
                                       child: Icon(
                                         Icons.chat,
-                                        color: Colors.white,
+                                        color: isSelected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
                                         size: 20,
                                       ),
                                     ),
@@ -620,7 +623,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   style: TextStyle(fontSize: 12),
                                 ),
                                 selected: isSelected,
-                                selectedTileColor: Colors.blue.shade50,
+                                selectedTileColor: colorScheme.primaryContainer.withOpacity(0.3),
                                 onTap: () {
                                   if (_isDeleteMode) {
                                     setState(() {
@@ -640,7 +643,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   Divider(height: 1),
                   ListTile(
-                    leading: Icon(Icons.add_circle_outline, color: Colors.blue),
+                    leading: Icon(Icons.add_circle_outline, color: colorScheme.primary),
                     title: Text('새 채팅 시작'),
                     onTap: () {
                       setState(() => _showChatList = false);
@@ -649,6 +652,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ],
               ),
+                );
+              },
             ),
           ),
         ],
@@ -674,7 +679,7 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.picture_as_pdf, color: Colors.red),
+            icon: Icon(Icons.picture_as_pdf, color: colorScheme.error),
             onPressed: _isUploadingPdf ? null : _pickAndUploadPdf,
             tooltip: 'PDF 업로드',
           ),
@@ -685,6 +690,15 @@ class _ChatScreenState extends State<ChatScreen> {
                 hintText: '메시지를 입력하세요...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 16,
@@ -697,9 +711,12 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           SizedBox(width: 8),
           CircleAvatar(
-            backgroundColor: _currentRoom != null ? Colors.blue : Colors.grey,
+            backgroundColor: _currentRoom != null ? colorScheme.primary : colorScheme.surfaceVariant,
             child: IconButton(
-              icon: Icon(Icons.send, color: Colors.white),
+              icon: Icon(
+                Icons.send,
+                color: _currentRoom != null ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+              ),
               onPressed: _currentRoom != null ? _sendMessage : null,
             ),
           ),
