@@ -12,82 +12,104 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
-    // [수정 1] 다크모드 여부에 따른 색상 정의
-    final isDark = themeProvider.isDarkMode;
-    final backgroundColor = isDark ? Colors.black : Colors.white; // 배경색
-    final textColor = isDark ? Colors.white : Colors.black; // 기본 글자색
-    final iconColor = isDark ? Colors.white : Colors.black; // 기본 아이콘색
-
-    // [수정 2] Scaffold로 감싸고 AppBar 추가
     return Scaffold(
       appBar: AppBar(
         title: const Text('설정'),
       ),
-      body: Container(
-        color: backgroundColor, // 여기가 핵심입니다! (배경을 어둡게 변경)
-        child: ListView(
-          padding: EdgeInsets.all(16),
-          children: [
-            // 다크모드 스위치
-            SwitchListTile(
-              title: Text(
-                '다크 모드',
-                style: TextStyle(color: textColor), // 글자색 적용
-              ),
-              subtitle: Text(
-                '어두운 테마를 사용합니다',
-                style: TextStyle(
-                  color: isDark ? Colors.grey : Colors.grey.shade600,
-                ),
-              ),
-              secondary: Icon(Icons.dark_mode, color: iconColor), // 아이콘색 적용
-              value: isDark,
-              activeColor: Colors.white,
-              activeTrackColor: Colors.grey.shade700,
-              inactiveThumbColor: Colors.grey,
-              inactiveTrackColor: Colors.grey.shade300,
-              onChanged: (value) => themeProvider.toggleTheme(value),
-            ),
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          // 다크모드 스위치
+          SwitchListTile(
+            title: Text('다크 모드'),
+            subtitle: Text('어두운 테마를 사용합니다'),
+            secondary: Icon(Icons.dark_mode),
+            value: themeProvider.isDarkMode,
+            onChanged: (value) => themeProvider.toggleTheme(value),
+          ),
 
-            Divider(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+          Divider(),
 
-            // 로그아웃
-            ListTile(
-              leading: Icon(Icons.logout, color: iconColor), // 아이콘색 적용
-              title: Text(
-                '로그아웃',
-                style: TextStyle(color: textColor), // 글자색 적용
-              ),
-              onTap: () async {
-                await userProvider.logout();
-                if (context.mounted) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
-                    (route) => false,
+          // 로그아웃
+          ListTile(
+            leading: Icon(Icons.logout),
+            title: Text('로그아웃'),
+            onTap: () async {
+              await userProvider.logout();
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                  (route) => false,
+                );
+              }
+            },
+          ),
+
+          // 계정 삭제 (빨간색 유지)
+          ListTile(
+            leading: Icon(Icons.delete_forever, color: colorScheme.error),
+            title: Text('계정 삭제', style: TextStyle(color: colorScheme.error)),
+            onTap: () async {
+              // 확인 다이얼로그 표시
+              final shouldDelete = await showDialog<bool>(
+                context: context,
+                builder: (context) {
+                  final dialogColorScheme = Theme.of(context).colorScheme;
+                  return AlertDialog(
+                    backgroundColor: dialogColorScheme.surface,
+                    title: Text(
+                      '계정 삭제',
+                      style: TextStyle(color: dialogColorScheme.onSurface),
+                    ),
+                    content: Text(
+                      '정말 계정을 삭제하시겠습니까?\n모든 데이터가 영구적으로 삭제됩니다.',
+                      style: TextStyle(color: dialogColorScheme.onSurface),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text('아니요'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: TextButton.styleFrom(
+                          foregroundColor: dialogColorScheme.error,
+                        ),
+                        child: Text('예'),
+                      ),
+                    ],
                   );
-                }
-              },
-            ),
+                },
+              );
 
-            // 계정 삭제 (빨간색 유지)
-            ListTile(
-              leading: Icon(Icons.delete_forever, color: Colors.red),
-              title: Text('계정 삭제', style: TextStyle(color: Colors.red)),
-              onTap: () async {
-                await userProvider.deleteAccount();
+              // 사용자가 '예'를 누른 경우에만 삭제 처리
+              if (shouldDelete == true) {
+                final success = await userProvider.deleteAccount();
                 if (context.mounted) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
-                    (route) => false,
-                  );
+                  if (success) {
+                    // 삭제 성공 시 로그인 화면으로 이동
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false,
+                    );
+                  } else {
+                    // 삭제 실패 시 에러 메시지 표시
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('계정 삭제에 실패했습니다. 다시 시도해주세요.'),
+                        backgroundColor: colorScheme.error,
+                      ),
+                    );
+                  }
                 }
-              },
-            ),
-          ],
-        ),
+              }
+            },
+          ),
+        ],
       ),
     );
   }

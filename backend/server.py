@@ -289,6 +289,56 @@ async def extract_concept_keyword(user_message: str) -> str:
         print(f"⚠️ 키워드 추출 오류: {e}, 원본 사용")
         return user_message
 
+# ========== 지식 수준 판단 함수 ==========
+async def judge_and_save_knowledge_level(room: models.ChatRoom, user_explanation: str, db: Session):
+    """사용자의 첫 번째 설명을 분석하여 지식 수준 (0-5) 판단 및 저장"""
+
+    concept = room.current_concept or "개념"
+
+    print(f"🧠 지식 수준 판단 시작: Room {room.id}, Concept: {concept}")
+
+    # 판단 프롬프트 생성
+    judgment_prompt = feynman_engine.get_knowledge_level_judgment_prompt(concept, user_explanation)
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": "llama3.1:8b",
+                    "prompt": judgment_prompt,
+                    "stream": False
+                },
+                timeout=30.0
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                ai_response = result.get("response", "").strip()
+
+                print(f"📊 AI 판단 결과:\n{ai_response}")
+
+                # 응답에서 지식 수준 숫자 추출
+                import re
+                # "지식수준: 3" 형식에서 숫자 추출
+                match = re.search(r'지식수준\s*:\s*(\d)', ai_response)
+                if match:
+                    knowledge_level = int(match.group(1))
+                    # 0-5 범위 검증
+                    if 0 <= knowledge_level <= 5:
+                        room.knowledge_level = knowledge_level
+                        db.commit()
+                        print(f"✅ 지식 수준 저장: {knowledge_level}")
+                    else:
+                        print(f"⚠️ 범위 벗어남 ({knowledge_level}), 기본값 유지")
+                else:
+                    print(f"⚠️ 응답에서 지식 수준 숫자를 찾을 수 없음, 기본값 유지")
+            else:
+                print(f"⚠️ AI 호출 실패 (상태: {response.status_code}), 기본값 유지")
+
+    except Exception as e:
+        print(f"❌ 지식 수준 판단 오류: {e}, 기본값 유지")
+
 # ========== RAG 쿼리 생성 함수 (학습 단계별 최적화) ==========
 def get_rag_query_for_phase(phase: LearningPhase, concept: str, message: str, original_question: str = None) -> str:
     """
@@ -506,6 +556,55 @@ def get_current_user_info(current_user: models.User = Depends(get_current_user))
     """현재 로그인한 사용자 정보 조회"""
     return current_user
 
+@app.delete("/api/auth/me")
+def delete_user_account(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """계정 삭제 (회원 탈퇴) - 사용자 및 모든 관련 데이터 삭제"""
+    try:
+        user_id = current_user.id
+        username = current_user.username
+
+        print(f"🗑️ 계정 삭제 시작: {username} (ID: {user_id})")
+
+        # 1. 사용자의 모든 채팅방 조회
+        rooms = db.query(models.ChatRoom).filter(models.ChatRoom.user_id == user_id).all()
+        room_ids = [room.id for room in rooms]
+
+        # 2. 채팅방의 모든 메시지 삭제
+        if room_ids:
+            db.query(models.Message).filter(models.Message.room_id.in_(room_ids)).delete(synchronize_session=False)
+            print(f"  - 메시지 삭제 완료")
+
+        # 3. 모든 채팅방 삭제
+        db.query(models.ChatRoom).filter(models.ChatRoom.user_id == user_id).delete(synchronize_session=False)
+        print(f"  - 채팅방 {len(room_ids)}개 삭제 완료")
+
+        # 4. ChromaDB에서 사용자의 PDF 데이터 삭제
+        try:
+            collection = chroma_client.get_collection(name="pdf_documents")
+            # 사용자의 모든 문서 조회
+            results = collection.get(where={"user_id": user_id})
+            if results and results['ids']:
+                collection.delete(ids=results['ids'])
+                print(f"  - ChromaDB에서 {len(results['ids'])}개 문서 삭제 완료")
+        except Exception as e:
+            print(f"  - ChromaDB 삭제 중 오류 (무시): {e}")
+
+        # 5. 사용자 계정 삭제
+        db.delete(current_user)
+        db.commit()
+
+        print(f"✅ 계정 삭제 완료: {username}")
+
+        return {"status": "ok", "message": "Account deleted successfully"}
+
+    except Exception as e:
+        db.rollback()
+        print(f"❌ 계정 삭제 오류: {e}")
+        raise HTTPException(status_code=500, detail=f"Account deletion failed: {str(e)}")
+
 @app.delete("/api/rooms/{room_id}")
 def delete_room(
     room_id: str, 
@@ -703,22 +802,22 @@ def delete_multiple_rooms(
     return {"status": "ok", "deleted_count": deleted_count}
 
 @app.post("/api/rooms/{room_id}/messages")
-def save_message(
-    room_id: str, 
-    message: MessageCreate, 
+async def save_message(
+    room_id: str,
+    message: MessageCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     """단순 메시지 저장 (AI 응답 없이, 본인 채팅방만)"""
     room = db.query(models.ChatRoom).filter(models.ChatRoom.id == room_id).first()
-    
+
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    
+
     # 본인 채팅방인지 확인
     if room.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
-    
+
     # 메시지 저장
     db_message = models.Message(
         room_id=room_id,
@@ -727,13 +826,17 @@ def save_message(
         phase=message.phase
     )
     db.add(db_message)
-    
+
     # 방 업데이트 시간 갱신
     room.updated_at = datetime.utcnow()
     db.commit()
-    
+
     print(f"💾 메시지 저장됨 (단계: {message.phase}): {message.content[:50]}...")
-    
+
+    # 첫 번째 설명 단계인 경우 지식 수준 판단
+    if message.phase == "first_explanation" and message.role == "user":
+        await judge_and_save_knowledge_level(room, message.content, db)
+
     return {"status": "ok", "message_id": db_message.id}
 
 # ========== 새로운 파인만 학습 엔드포인트 ==========
