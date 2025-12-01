@@ -4,8 +4,9 @@ import '../services/websocket_service.dart';
 import '../services/api_service.dart';
 import '../models/chat_models.dart';
 import '../models/learning_models.dart';
-import 'dart:convert'; 
+import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -473,24 +474,26 @@ class _ChatScreenState extends State<ChatScreen> {
               if (_isLoadingMessages) LinearProgressIndicator(),
               
               Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: EdgeInsets.all(16),
-                  itemCount: _messages.length + (_isAiTyping ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index < _messages.length) {
-                      return ChatBubble(message: _messages[index]);
-                    } else {
-                      return ChatBubble(
-                        message: ChatMessage(
-                          text: _currentAiMessage,
-                          isUser: false,
-                        ),
-                        isTyping: true,
-                      );
-                    }
-                  },
-                ),
+                child: _messages.isEmpty && !_isAiTyping
+                    ? _buildWelcomeScreen()
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: EdgeInsets.all(16),
+                        itemCount: _messages.length + (_isAiTyping ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index < _messages.length) {
+                            return ChatBubble(message: _messages[index]);
+                          } else {
+                            return ChatBubble(
+                              message: ChatMessage(
+                                text: _currentAiMessage,
+                                isUser: false,
+                              ),
+                              isTyping: true,
+                            );
+                          }
+                        },
+                      ),
               ),
               _buildInputArea(),
             ],
@@ -656,6 +659,48 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeScreen() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 로고를 약간 위로 올리기 위한 Spacer
+          Spacer(flex: 2),
+
+          // SVG 로고
+          SvgPicture.asset(
+            'assets/images/logo.svg',
+            width: 120,
+            height: 120,
+            colorFilter: ColorFilter.mode(
+              brightness == Brightness.dark ? Colors.white : Colors.black,
+              BlendMode.srcIn,
+            ),
+          ),
+
+          SizedBox(height: 24),
+
+          // 텍스트
+          Text(
+            '진정으로 이해할 준비가 됬나요?',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: brightness == Brightness.dark ? Colors.white : Colors.black,
+            ),
+            textAlign: TextAlign.center,
+          ),
+
+          // 아래 여백
+          Spacer(flex: 3),
         ],
       ),
     );
