@@ -69,8 +69,10 @@ class _QuizEditScreenState extends State<QuizEditScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              titleController.dispose();
               Navigator.pop(context);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                titleController.dispose();
+              });
             },
             child: Text(
               '취소',
@@ -103,8 +105,10 @@ class _QuizEditScreenState extends State<QuizEditScreen> {
                 setState(() {
                   _quizName = newTitle;
                 });
-                titleController.dispose();
                 Navigator.pop(context);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  titleController.dispose();
+                });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('퀴즈 제목이 수정되었습니다'),
@@ -112,6 +116,10 @@ class _QuizEditScreenState extends State<QuizEditScreen> {
                   ),
                 );
               } else if (mounted) {
+                Navigator.pop(context);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  titleController.dispose();
+                });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('퀴즈 제목 수정에 실패했습니다'),
@@ -295,12 +303,14 @@ class _QuizEditScreenState extends State<QuizEditScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                // 컨트롤러들 정리
-                textController.dispose();
-                for (var controller in answerControllers!) {
-                  controller.dispose();
-                }
                 Navigator.pop(context);
+                // 컨트롤러들 정리
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  textController.dispose();
+                  for (var controller in answerControllers!) {
+                    controller.dispose();
+                  }
+                });
               },
               child: Text(
                 '취소',
@@ -347,17 +357,18 @@ class _QuizEditScreenState extends State<QuizEditScreen> {
                   listen: false,
                 ).updateQuestion(question.id!, updatedQuestion);
 
-                // 컨트롤러들 정리
-                textController.dispose();
-                for (var controller in answerControllers!) {
-                  controller.dispose();
-                }
-
                 if (success && mounted) {
                   setState(() {
                     _questions[index] = updatedQuestion;
                   });
                   Navigator.pop(context);
+                  // 컨트롤러들 정리
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    textController.dispose();
+                    for (var controller in answerControllers!) {
+                      controller.dispose();
+                    }
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('수정되었습니다!'),
@@ -366,6 +377,13 @@ class _QuizEditScreenState extends State<QuizEditScreen> {
                   );
                 } else if (mounted) {
                   Navigator.pop(context);
+                  // 컨트롤러들 정리
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    textController.dispose();
+                    for (var controller in answerControllers!) {
+                      controller.dispose();
+                    }
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('수정에 실패했습니다'),
