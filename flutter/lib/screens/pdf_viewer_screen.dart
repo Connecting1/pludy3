@@ -45,25 +45,38 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
     // Syncfusion 기본 메뉴를 닫기 위해 텍스트 선택 해제
     _pdfViewerController.clearSelection();
 
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('AI 학습'),
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        title: Text(
+          'AI 학습',
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('선택한 텍스트로 학습을 시작하시겠습니까?'),
+            Text(
+              '선택한 텍스트로 학습을 시작하시겠습니까?',
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            ),
             SizedBox(height: 12),
             Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: isDark ? Colors.grey[800] : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 selectedTextCopy,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
                 maxLines: 5,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -73,13 +86,20 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('취소'),
+            child: Text(
+              '취소',
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _startLearningWithText(selectedTextCopy);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? Colors.white : Colors.black,
+              foregroundColor: isDark ? Colors.black : Colors.white,
+            ),
             child: Text('시작'),
           ),
         ],
@@ -90,19 +110,30 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   // 학습 시작
   void _startLearningWithText(String selectedText) async {
     try {
+      final brightness = Theme.of(context).brightness;
+      final isDark = brightness == Brightness.dark;
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => Center(
           child: Card(
+            color: isDark ? Colors.grey[900] : Colors.white,
             child: Padding(
               padding: EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
                   SizedBox(height: 16),
-                  Text('학습 준비 중...'),
+                  Text(
+                    '학습 준비 중...',
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  ),
                 ],
               ),
             ),
@@ -150,12 +181,18 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   @override
   Widget build(BuildContext context) {
     final pdfUrl = '${AppConfig.baseUrl}/${widget.pdfFile.filePath}';
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.pdfFile.originalFilename, overflow: TextOverflow.ellipsis),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        elevation: 1,
+        iconTheme: IconThemeData(
+          color: isDark ? Colors.white : Colors.black,
+        ),
         actions: [
           if (_selectedText != null && _selectedText!.isNotEmpty)
             IconButton(
