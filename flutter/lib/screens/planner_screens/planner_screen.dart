@@ -42,11 +42,16 @@ class _PlannerScreenState extends State<PlannerScreen>
           isScrollable: false,
           labelPadding: const EdgeInsets.symmetric(horizontal: 8),
           tabAlignment: TabAlignment.fill,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white,
+          indicatorColor: Colors.white,
+          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontSize: 14),
           tabs: const [
-            Tab(icon: Icon(Icons.calendar_today, size: 22), text: '캘린더'),
-            Tab(icon: Icon(Icons.schedule, size: 22), text: '시간표'),
-            Tab(icon: Icon(Icons.flag, size: 22), text: '목표달성'),
-            Tab(icon: Icon(Icons.calculate, size: 22), text: '학점계산기'),
+            Tab(icon: Icon(Icons.calendar_today, size: 22, color: Colors.white), text: '캘린더'),
+            Tab(icon: Icon(Icons.schedule, size: 22, color: Colors.white), text: '시간표'),
+            Tab(icon: Icon(Icons.flag, size: 22, color: Colors.white), text: '목표달성'),
+            Tab(icon: Icon(Icons.calculate, size: 22, color: Colors.white), text: '학점계산기'),
           ],
         ),
       ),
@@ -203,7 +208,7 @@ class _CalendarViewState extends State<CalendarView> {
       children: [
         // 헤더와 추가 버튼
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1569,46 +1574,48 @@ class _SubjectDialogState extends State<SubjectDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.subject == null ? '과목 추가' : '과목 수정'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: '과목명 *',
-              border: OutlineInputBorder(),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: '과목명 *',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _creditsController,
-            decoration: const InputDecoration(
-              labelText: '학점 *',
-              border: OutlineInputBorder(),
-              hintText: '예: 3',
+            const SizedBox(height: 16),
+            TextField(
+              controller: _creditsController,
+              decoration: const InputDecoration(
+                labelText: '학점 *',
+                border: OutlineInputBorder(),
+                hintText: '예: 3',
+              ),
+              keyboardType: TextInputType.number,
             ),
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _selectedGrade,
-            decoration: const InputDecoration(
-              labelText: '성적',
-              border: OutlineInputBorder(),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedGrade,
+              decoration: const InputDecoration(
+                labelText: '성적',
+                border: OutlineInputBorder(),
+              ),
+              items:
+                  _grades.map((grade) {
+                    return DropdownMenuItem(value: grade, child: Text(grade));
+                  }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedGrade = value;
+                  });
+                }
+              },
             ),
-            items:
-                _grades.map((grade) {
-                  return DropdownMenuItem(value: grade, child: Text(grade));
-                }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _selectedGrade = value;
-                });
-              }
-            },
-          ),
-        ],
+          ],
+        ),
       ),
       actions: [
         TextButton(
