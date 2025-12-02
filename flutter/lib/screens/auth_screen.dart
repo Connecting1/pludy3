@@ -84,8 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   Center(
                     child: SvgPicture.asset(
                       'assets/images/logo.svg',
-                      width: 100,
-                      height: 100,
+                      width: 200,
+                      height: 200,
                       colorFilter: ColorFilter.mode(
                         brightness == Brightness.dark ? Colors.white : Colors.black,
                         BlendMode.srcIn,
