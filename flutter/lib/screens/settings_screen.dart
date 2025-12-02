@@ -171,7 +171,7 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Waylo Quiz App',
+                  'Pludy',
                   style: TextStyle(
                     color: colorScheme.secondary,
                     fontSize: 14,
