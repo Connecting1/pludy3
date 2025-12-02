@@ -200,40 +200,42 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                     label: Text('삭제 (${_selectedQuizIds.length})'),
                   )
                   : null
-              : quizzes.isEmpty
-              ? null
               : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(
-                    width: 130,
-                    child: FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QuizCreateScreen(),
+                  // 수동 추가 버튼 - 퀴즈가 1개 이상일 때만 표시
+                  if (quizzes.isNotEmpty) ...[
+                    SizedBox(
+                      width: 130,
+                      child: FloatingActionButton.extended(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QuizCreateScreen(),
+                            ),
+                          ).then((_) => _loadQuizzes());
+                        },
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        icon: Icon(Icons.edit, size: 18),
+                        label: Text(
+                          '수동 추가',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
                           ),
-                        ).then((_) => _loadQuizzes());
-                      },
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      icon: Icon(Icons.edit, size: 18),
-                      label: Text(
-                        '수동 추가',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
                         ),
+                        extendedPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        heroTag: 'manual_quiz',
                       ),
-                      extendedPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      heroTag: 'manual_quiz',
                     ),
-                  ),
-                  SizedBox(height: 12),
+                    SizedBox(height: 12),
+                  ],
+                  // AI 생성 버튼 - 항상 표시
                   SizedBox(
                     width: 130,
                     child: FloatingActionButton.extended(
