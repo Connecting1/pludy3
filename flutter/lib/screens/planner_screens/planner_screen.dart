@@ -122,93 +122,94 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 화면 높이에 맞게 캘린더 크기 조절
-        final availableHeight = constraints.maxHeight;
-        final calendarHeight = availableHeight * 0.5; // 화면의 50%를 캘린더에 할당
-        final rowHeight = (calendarHeight - 100) / 6; // 6주 표시 (헤더 제외)
-
-        return Column(
-          children: [
-            // 캘린더 위젯
-            TableCalendar<Schedule>(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              eventLoader: (day) {
-                final date = DateTime(day.year, day.month, day.day);
-                return _allSchedulesMap[date] ?? [];
-              },
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-                // 선택한 날짜의 일정 로드
-                _loadSchedules();
-              },
-              calendarFormat: CalendarFormat.month,
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              daysOfWeekHeight: 40, // 요일 헤더 높이
-              rowHeight: rowHeight.clamp(40.0, 60.0), // 날짜 셀 높이 (최소 40, 최대 60)
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
+    return CustomScrollView(
+      slivers: [
+        // 캘린더 위젯
+        SliverToBoxAdapter(
+          child: TableCalendar<Schedule>(
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: _focusedDay,
+            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+            eventLoader: (day) {
+              final date = DateTime(day.year, day.month, day.day);
+              return _allSchedulesMap[date] ?? [];
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+              // 선택한 날짜의 일정 로드
+              _loadSchedules();
+            },
+            calendarFormat: CalendarFormat.month,
+            startingDayOfWeek: StartingDayOfWeek.monday,
+            daysOfWeekHeight: 40, // 요일 헤더 높이
+            rowHeight: 52, // 날짜 셀 높이
+            headerStyle: const HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+            ),
+            calendarStyle: CalendarStyle(
+              markerDecoration: const BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
               ),
-              calendarStyle: CalendarStyle(
-                markerDecoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                todayDecoration: BoxDecoration(
-                  color: Colors.blue.shade100,
-                  shape: BoxShape.circle,
-                ),
-                selectedDecoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
+              todayDecoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                shape: BoxShape.circle,
               ),
-              calendarBuilders: CalendarBuilders(
-                markerBuilder: (context, date, events) {
-                  if (events.isNotEmpty) {
-                    return Positioned(
-                      bottom: 1,
-                      child: Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    );
-                  }
-                  return null;
-                },
+              selectedDecoration: const BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
               ),
             ),
-            const Divider(),
-            // 선택한 날짜의 일정 목록
-            Expanded(child: _buildScheduleList()),
-          ],
-        );
-      },
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, date, events) {
+                if (events.isNotEmpty) {
+                  return Positioned(
+                    bottom: 1,
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  );
+                }
+                return null;
+              },
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: Divider()),
+        // 선택한 날짜의 일정 목록
+        ..._buildScheduleListSlivers(),
+      ],
     );
   }
 
-  // 선택한 날짜의 일정 목록 표시
-  Widget _buildScheduleList() {
+  // 선택한 날짜의 일정 목록을 Sliver들로 반환
+  List<Widget> _buildScheduleListSlivers() {
     final brightness = Theme.of(context).brightness;
     final isDark = brightness == Brightness.dark;
 
+<<<<<<< HEAD
     return Column(
       children: [
         // 헤더와 추가 버튼
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+=======
+    return [
+      // 헤더와 추가 버튼
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+>>>>>>> d20c7d3c19d7472c6a9805885bf39e3dec832d11
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -228,28 +229,29 @@ class _CalendarViewState extends State<CalendarView> {
             ],
           ),
         ),
-        const Divider(),
-        // 일정 목록
-        Expanded(
-          child:
-              _schedules.isEmpty
-                  ? const Center(
-                    child: Text(
-                      '일정이 없습니다.\n+ 버튼을 눌러 일정을 추가하세요.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                  : ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: _schedules.length,
-                    itemBuilder: (context, index) {
-                      return _buildScheduleItem(_schedules[index]);
-                    },
-                  ),
-        ),
-      ],
-    );
+      ),
+      const SliverToBoxAdapter(child: Divider()),
+      // 일정 목록
+      _schedules.isEmpty
+          ? SliverFillRemaining(
+              hasScrollBody: false,
+              child: const Center(
+                child: Text(
+                  '일정이 없습니다.\n+ 버튼을 눌러 일정을 추가하세요.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            )
+          : SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  return _buildScheduleItem(_schedules[index]);
+                },
+                childCount: _schedules.length,
+              ),
+            ),
+    ];
   }
 
   // 일정 아이템 위젯
