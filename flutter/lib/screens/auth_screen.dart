@@ -29,7 +29,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _startTypingAnimation();
+    // 화면 전환 애니메이션이 완료된 후 타이핑 애니메이션 시작
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _startTypingAnimation();
+        }
+      });
+    });
   }
 
   void _startTypingAnimation() {
