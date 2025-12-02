@@ -738,6 +738,7 @@ class QuizQuestionCreate(BaseModel):
     question_order: int
     correct_answer: Optional[str] = None  # 서술형 정답
     answers: Optional[List[QuizAnswerCreate]] = None  # 4지선다 선택지
+    image_data: Optional[str] = None
 
 class QuizCreate(BaseModel):
     quiz_name: str
@@ -748,6 +749,7 @@ class QuizAnswerResponse(BaseModel):
     answer_text: str
     is_correct: bool
     answer_order: int
+    image_data: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -1929,7 +1931,8 @@ async def create_quiz(
             question_text=q_data.question_text,
             question_type=q_data.question_type,
             question_order=q_data.question_order,
-            correct_answer=q_data.correct_answer
+            correct_answer=q_data.correct_answer,
+            image_data=q_data.image_data
         )
         db.add(new_question)
         db.flush()

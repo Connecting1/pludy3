@@ -109,81 +109,229 @@ class _AIQuizPreviewScreenState extends State<AIQuizPreviewScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final question = _questions[index];
+    final isMultipleChoice = question['question_type'] == 'multiple_choice';
+
     final questionController = TextEditingController(
       text: question['question_text']?.toString() ?? '',
     );
 
+    // 4지선다인 경우 답변 컨트롤러들 생성
+    List<TextEditingController>? answerControllers;
+    int selectedAnswerIndex = 0;
+
+    if (isMultipleChoice) {
+      final answers = (question['answers'] ?? []) as List;
+      answerControllers = answers.map((answer) {
+        return TextEditingController(
+          text: answer['answer_text']?.toString() ?? '',
+        );
+      }).toList();
+
+      // 현재 정답 찾기
+      selectedAnswerIndex = answers.indexWhere((ans) => ans['is_correct'] == true);
+      if (selectedAnswerIndex == -1) selectedAnswerIndex = 0;
+    } else {
+      // 주관식인 경우 정답 컨트롤러
+      answerControllers = [
+        TextEditingController(
+          text: question['correct_answer']?.toString() ?? '',
+        ),
+      ];
+    }
+
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              '문제 수정',
-              style: TextStyle(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: TextField(
-              controller: questionController,
-              maxLines: 3,
-              style: TextStyle(color: colorScheme.onSurface),
-              decoration: InputDecoration(
-                labelText: '문제',
-                labelStyle: TextStyle(color: colorScheme.secondary),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colorScheme.outline),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colorScheme.outline),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  '취소',
-                  style: TextStyle(
-                    color: colorScheme.secondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _questions[index]['question_text'] =
-                        questionController.text;
-                  });
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('문제가 수정되었습니다'),
-                      backgroundColor: colorScheme.primary,
-                    ),
-                  );
-                },
-                child: Text(
-                  '저장',
-                  style: TextStyle(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
+          title: Text(
+            '문제 수정',
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 문제 텍스트
+                  TextField(
+                    controller: questionController,
+                    maxLines: 3,
+                    style: TextStyle(color: colorScheme.onSurface),
+                    decoration: InputDecoration(
+                      labelText: '문제',
+                      labelStyle: TextStyle(color: colorScheme.secondary),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colorScheme.outline),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colorScheme.outline),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20),
+
+                  // 4지선다인 경우 답변 선택지들
+                  if (isMultipleChoice) ...[
+                    Text(
+                      '답변 선택지',
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    ...List.generate(answerControllers!.length, (idx) {
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            // 정답 선택 라디오 버튼
+                            Radio<int>(
+                              value: idx,
+                              groupValue: selectedAnswerIndex,
+                              activeColor: colorScheme.primary,
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  selectedAnswerIndex = value!;
+                                });
+                              },
+                            ),
+                            SizedBox(width: 8),
+                            // 답변 텍스트 입력
+                            Expanded(
+                              child: TextField(
+                                controller: answerControllers![idx],
+                                style: TextStyle(color: colorScheme.onSurface),
+                                decoration: InputDecoration(
+                                  labelText: '${idx + 1}번',
+                                  labelStyle: TextStyle(color: colorScheme.secondary),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: colorScheme.outline),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: colorScheme.outline),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ] else ...[
+                    // 주관식인 경우 정답
+                    TextField(
+                      controller: answerControllers![0],
+                      maxLines: 2,
+                      style: TextStyle(color: colorScheme.onSurface),
+                      decoration: InputDecoration(
+                        labelText: '정답',
+                        labelStyle: TextStyle(color: colorScheme.secondary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.outline),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.outline),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // 컨트롤러들 정리
+                questionController.dispose();
+                for (var controller in answerControllers!) {
+                  controller.dispose();
+                }
+                Navigator.pop(context);
+              },
+              child: Text(
+                '취소',
+                style: TextStyle(
+                  color: colorScheme.secondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  // 문제 텍스트 업데이트
+                  _questions[index]['question_text'] = questionController.text;
+
+                  if (isMultipleChoice) {
+                    // 4지선다인 경우 답변들 업데이트
+                    final answers = (_questions[index]['answers'] ?? []) as List;
+                    for (int i = 0; i < answers.length; i++) {
+                      answers[i]['answer_text'] = answerControllers![i].text;
+                      answers[i]['is_correct'] = i == selectedAnswerIndex;
+                    }
+                  } else {
+                    // 주관식인 경우 정답 업데이트
+                    _questions[index]['correct_answer'] = answerControllers![0].text;
+                  }
+                });
+
+                // 컨트롤러들 정리
+                questionController.dispose();
+                for (var controller in answerControllers!) {
+                  controller.dispose();
+                }
+
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('문제가 수정되었습니다'),
+                    backgroundColor: colorScheme.primary,
+                  ),
+                );
+              },
+              child: Text(
+                '저장',
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -458,56 +606,76 @@ class _AIQuizPreviewScreenState extends State<AIQuizPreviewScreen> {
                 final answer = entry.value;
                 final isCorrect = answer['is_correct'] == true;
 
-                return Container(
-                  margin: EdgeInsets.only(bottom: 8),
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isCorrect ? colorScheme.primary : colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isCorrect ? colorScheme.primary : colorScheme.outline,
-                      width: isCorrect ? 2 : 1,
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      // 모든 선택지를 false로 설정
+                      for (var ans in question['answers']) {
+                        ans['is_correct'] = false;
+                      }
+                      // 선택한 선택지만 true로 설정
+                      answer['is_correct'] = true;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('정답이 ${idx + 1}번으로 변경되었습니다'),
+                        backgroundColor: colorScheme.primary,
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: 8),
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isCorrect ? colorScheme.primary : colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isCorrect ? colorScheme.primary : colorScheme.outline,
+                        width: isCorrect ? 2 : 1,
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: isCorrect ? colorScheme.onPrimary : colorScheme.surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isCorrect ? colorScheme.onPrimary : colorScheme.outline,
-                            width: 2,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: isCorrect ? colorScheme.onPrimary : colorScheme.surface,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isCorrect ? colorScheme.onPrimary : colorScheme.outline,
+                              width: 2,
+                            ),
                           ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${idx + 1}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: isCorrect ? colorScheme.primary : colorScheme.secondary,
+                          child: Center(
+                            child: Text(
+                              '${idx + 1}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isCorrect ? colorScheme.primary : colorScheme.secondary,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          answer['answer_text']?.toString() ?? '',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isCorrect ? colorScheme.onPrimary : colorScheme.onSurface,
-                            fontWeight:
-                                isCorrect ? FontWeight.w600 : FontWeight.normal,
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            answer['answer_text']?.toString() ?? '',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isCorrect ? colorScheme.onPrimary : colorScheme.onSurface,
+                              fontWeight:
+                                  isCorrect ? FontWeight.w600 : FontWeight.normal,
+                            ),
                           ),
                         ),
-                      ),
-                      if (isCorrect)
-                        Icon(Icons.check_circle, color: colorScheme.onPrimary, size: 20),
-                    ],
+                        if (isCorrect)
+                          Icon(Icons.check_circle, color: colorScheme.onPrimary, size: 20),
+                      ],
+                    ),
                   ),
                 );
               }).toList(),
