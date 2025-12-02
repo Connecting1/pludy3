@@ -113,15 +113,14 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // 로고 이미지 (다크/라이트 모드)
-              Image.asset(
-                'assets/images/logo_dark.png', // 로고 경로
-                width: 100,
-                height: 100,
-                // 라이트 모드에서는 색상 반전 (선택사항)
-                color: Theme.of(context).brightness == Brightness.light
-                    ? Colors.black
-                    : Colors.white,
-                colorBlendMode: BlendMode.srcIn,
+              SvgPicture.asset(
+                'assets/images/logo.svg',
+                width: 200,
+                height: 200,
+                colorFilter: ColorFilter.mode(
+                  brightness == Brightness.dark ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
               ),
               SizedBox(height: 24),
               // 앱 이름
