@@ -25,7 +25,10 @@ class SettingsScreen extends StatelessWidget {
           // 다크모드 스위치
           SwitchListTile(
             title: Text('다크 모드'),
-            subtitle: Text('어두운 테마를 사용합니다'),
+            subtitle: Text(
+              '어두운 테마를 사용합니다',
+              style: TextStyle(fontSize: 13),
+            ),
             secondary: Icon(Icons.dark_mode),
             value: themeProvider.isDarkMode,
             onChanged: (value) => themeProvider.toggleTheme(value),
@@ -37,7 +40,10 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.privacy_tip_outlined),
             title: Text('개인정보 보호 정책'),
-            subtitle: Text('개인정보 처리 방침을 확인하세요'),
+            subtitle: Text(
+              '개인정보 처리 방침을 확인하세요',
+              style: TextStyle(fontSize: 13),
+            ),
             trailing: Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(

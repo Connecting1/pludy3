@@ -152,16 +152,18 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('퀴즈 만들기'),
-        backgroundColor: colorScheme.surface,
-        foregroundColor: colorScheme.onSurface,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Colors.white),
         actions: [
           // AI 생성 버튼 추가!
           IconButton(
-            icon: Icon(Icons.auto_awesome),
+            icon: Icon(Icons.auto_awesome, color: Colors.white),
             tooltip: 'AI로 퀴즈 생성',
             onPressed: () async {
               final result = await Navigator.push(
