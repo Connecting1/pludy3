@@ -1994,7 +1994,7 @@ async def update_quiz(
 
     old_name = quiz.quiz_name
     quiz.quiz_name = quiz_data.quiz_name
-    quiz.updated_at = datetime.now(timezone.utc)
+    quiz.updated_at = datetime.utcnow()
 
     db.commit()
     db.refresh(quiz)
