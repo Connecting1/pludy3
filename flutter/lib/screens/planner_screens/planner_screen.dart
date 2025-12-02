@@ -34,22 +34,19 @@ class _PlannerScreenState extends State<PlannerScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('학습 플래너'),
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: true,
-          labelColor: theme.colorScheme.onPrimary, // 선택된 탭 색상
-          unselectedLabelColor: theme.colorScheme.onPrimary.withOpacity(0.6), // 선택 안 된 탭 색상
-          indicatorColor: theme.colorScheme.onPrimary, // 하단 인디케이터 색상
+          isScrollable: false,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+          tabAlignment: TabAlignment.fill,
           tabs: const [
-            Tab(icon: Icon(Icons.calendar_today), text: '캘린더'),
-            Tab(icon: Icon(Icons.schedule), text: '시간표'),
-            Tab(icon: Icon(Icons.flag), text: '목표달성'),
-            Tab(icon: Icon(Icons.calculate), text: '학점계산기'),
+            Tab(icon: Icon(Icons.calendar_today, size: 22), text: '캘린더'),
+            Tab(icon: Icon(Icons.schedule, size: 22), text: '시간표'),
+            Tab(icon: Icon(Icons.flag, size: 22), text: '목표달성'),
+            Tab(icon: Icon(Icons.calculate, size: 22), text: '학점계산기'),
           ],
         ),
       ),
@@ -199,6 +196,9 @@ class _CalendarViewState extends State<CalendarView> {
 
   // 선택한 날짜의 일정 목록 표시
   Widget _buildScheduleList() {
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+
     return Column(
       children: [
         // 헤더와 추가 버튼
@@ -216,6 +216,8 @@ class _CalendarViewState extends State<CalendarView> {
               ),
               FloatingActionButton.small(
                 onPressed: () => _showAddScheduleDialog(),
+                backgroundColor: isDark ? Colors.white : Colors.black,
+                foregroundColor: isDark ? Colors.black : Colors.white,
                 child: const Icon(Icons.add),
               ),
             ],
@@ -837,6 +839,9 @@ class _GoalViewState extends State<GoalView> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+
     return Column(
       children: [
         // 헤더와 추가 버튼
@@ -851,6 +856,8 @@ class _GoalViewState extends State<GoalView> {
               ),
               FloatingActionButton.small(
                 onPressed: () => _showAddGoalDialog(),
+                backgroundColor: isDark ? Colors.white : Colors.black,
+                foregroundColor: isDark ? Colors.black : Colors.white,
                 child: const Icon(Icons.add),
               ),
             ],
@@ -1055,8 +1062,14 @@ class _GradeCalculatorViewState extends State<GradeCalculatorView> {
     // TODO: SharedPreferences에서 로드
     setState(() {
       if (_subjectsBySemester.isEmpty) {
-        // 기본 학기 추가
-        _addSemester(1, 1);
+        // 1학년 1학기부터 4학년 2학기까지 모두 초기화
+        for (int year = 1; year <= 4; year++) {
+          for (int semester = 1; semester <= 2; semester++) {
+            final key = '$year-$semester';
+            _subjectsBySemester[key] = [];
+          }
+        }
+        _selectedSemester = '1-1'; // 기본 선택은 1학년 1학기
       }
     });
     _calculateGPA();
@@ -1102,100 +1115,100 @@ class _GradeCalculatorViewState extends State<GradeCalculatorView> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+
     return Column(
       children: [
         // 결과 표시 영역
         Container(
           padding: const EdgeInsets.all(16),
-          color: Colors.blue.shade50,
+          color: isDark ? Colors.black : Colors.white,
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatCard('총 학점', _totalCredits.toStringAsFixed(1)),
-                  _buildStatCard('평균 학점', _gpa.toStringAsFixed(2)),
+                  _buildStatCard('총 학점', _totalCredits.toStringAsFixed(1), isDark),
+                  _buildStatCard('평균 학점', _gpa.toStringAsFixed(2), isDark),
                 ],
               ),
             ],
           ),
         ),
         const Divider(),
-        // 학기 선택 및 추가 버튼
+        // 학기 선택 버튼과 과목 추가 버튼
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
               Expanded(
-                child: DropdownButton<String>(
-                  value: _selectedSemester,
-                  hint: const Text('학기 선택'),
-                  isExpanded: true,
-                  items:
-                      _subjectsBySemester.keys.map((key) {
-                        return DropdownMenuItem(
-                          value: key,
-                          child: Text(_getSemesterDisplayName(key)),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedSemester = value;
-                    });
-                    _calculateGPA();
-                  },
+                child: GestureDetector(
+                  onTap: () => _showSemesterSelectionDialog(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white : Colors.black,
+                      borderRadius: BorderRadius.zero,
+                      border: Border.all(
+                        color: isDark ? Colors.white : Colors.black,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _selectedSemester != null
+                              ? _getSemesterDisplayName(_selectedSemester!)
+                              : '학기 선택',
+                          style: TextStyle(
+                            color: isDark ? Colors.black : Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_drop_down,
+                          color: isDark ? Colors.black : Colors.white,
+                          size: 24,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () => _showAddSemesterDialog(),
-                tooltip: '학기 추가',
-              ),
+              const SizedBox(width: 8),
               if (_selectedSemester != null)
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed:
-                      () => _showDeleteSemesterDialog(_selectedSemester!),
-                  tooltip: '학기 삭제',
+                FloatingActionButton.small(
+                  onPressed: () => _showAddSubjectDialog(),
+                  backgroundColor: isDark ? Colors.white : Colors.black,
+                  foregroundColor: isDark ? Colors.black : Colors.white,
+                  child: const Icon(Icons.add),
                 ),
             ],
           ),
         ),
-        const Divider(),
-        // 헤더와 과목 추가 버튼
-        if (_selectedSemester != null)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${_getSemesterDisplayName(_selectedSemester!)} 과목 목록',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                FloatingActionButton.small(
-                  onPressed: () => _showAddSubjectDialog(),
-                  child: const Icon(Icons.add),
-                ),
-              ],
+        // 학기 선택 전 안내 메시지
+        if (_selectedSemester == null)
+          Expanded(
+            child: const Center(
+              child: Text(
+                '위에서 학기를 선택해주세요.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
             ),
-          ),
-        const Divider(),
-        // 과목 목록
-        Expanded(
-          child:
-              _selectedSemester == null
-                  ? const Center(
-                    child: Text(
-                      '학기를 선택하거나 추가하세요.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                  : _subjectsBySemester[_selectedSemester!]!.isEmpty
+          )
+        else
+          // 과목 목록
+          Expanded(
+            child:
+                _subjectsBySemester[_selectedSemester!]!.isEmpty
                   ? const Center(
                     child: Text(
                       '과목이 없습니다.\n+ 버튼을 눌러 과목을 추가하세요.',
@@ -1219,17 +1232,17 @@ class _GradeCalculatorViewState extends State<GradeCalculatorView> {
   }
 
   // 통계 카드
-  Widget _buildStatCard(String label, String value) {
+  Widget _buildStatCard(String label, String value, bool isDark) {
     return Column(
       children: [
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.blue,
+            color: isDark ? Colors.white : Colors.black,
           ),
         ),
       ],
@@ -1279,6 +1292,71 @@ class _GradeCalculatorViewState extends State<GradeCalculatorView> {
     _gpa = _totalCredits > 0 ? _totalGradePoints / _totalCredits : 0.0;
 
     setState(() {});
+  }
+
+  // 학기 선택 다이얼로그
+  Future<void> _showSemesterSelectionDialog() async {
+    final semesterKeys =
+        _subjectsBySemester.keys.toList()..sort((a, b) {
+          final aParts = a.split('-');
+          final bParts = b.split('-');
+          final aYear = int.parse(aParts[0]);
+          final bYear = int.parse(bParts[0]);
+          final aSemester = int.parse(aParts[1]);
+          final bSemester = int.parse(bParts[1]);
+          if (aYear != bYear) return aYear.compareTo(bYear);
+          return aSemester.compareTo(bSemester);
+        });
+
+    final selectedKey = await showDialog<String>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('학기 선택'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: semesterKeys.length,
+                itemBuilder: (context, index) {
+                  final key = semesterKeys[index];
+                  final isSelected = _selectedSemester == key;
+
+                  return ListTile(
+                    title: Text(
+                      _getSemesterDisplayName(key),
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? Colors.blue : Colors.black87,
+                      ),
+                    ),
+                    trailing:
+                        isSelected
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                    onTap: () {
+                      Navigator.of(context).pop(key);
+                    },
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('취소'),
+              ),
+            ],
+          ),
+    );
+
+    if (selectedKey != null) {
+      setState(() {
+        _selectedSemester = selectedKey;
+      });
+      _calculateGPA();
+    }
   }
 
   // 학기 추가 다이얼로그
@@ -1457,8 +1535,6 @@ class _SubjectDialogState extends State<SubjectDialog> {
   final _nameController = TextEditingController();
   final _creditsController = TextEditingController();
   String _selectedGrade = 'A+';
-  int? _selectedYear;
-  int? _selectedSemester;
 
   final List<String> _grades = [
     'A+',
@@ -1479,11 +1555,6 @@ class _SubjectDialogState extends State<SubjectDialog> {
       _nameController.text = widget.subject!.name;
       _creditsController.text = widget.subject!.credits.toString();
       _selectedGrade = widget.subject!.grade;
-      _selectedYear = widget.subject!.year;
-      _selectedSemester = widget.subject!.semester;
-    } else {
-      _selectedYear = widget.year;
-      _selectedSemester = widget.semester;
     }
   }
 
@@ -1519,48 +1590,6 @@ class _SubjectDialogState extends State<SubjectDialog> {
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 16),
-          if (widget.subject == null) ...[
-            DropdownButtonFormField<int>(
-              value: _selectedYear,
-              decoration: const InputDecoration(
-                labelText: '학년',
-                border: OutlineInputBorder(),
-              ),
-              items:
-                  List.generate(4, (index) => index + 1).map((year) {
-                    return DropdownMenuItem(
-                      value: year,
-                      child: Text('$year학년'),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedYear = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              value: _selectedSemester,
-              decoration: const InputDecoration(
-                labelText: '학기',
-                border: OutlineInputBorder(),
-              ),
-              items:
-                  [1, 2].map((semester) {
-                    return DropdownMenuItem(
-                      value: semester,
-                      child: Text('$semester학기'),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedSemester = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
           DropdownButtonFormField<String>(
             value: _selectedGrade,
             decoration: const InputDecoration(
@@ -1607,14 +1636,12 @@ class _SubjectDialogState extends State<SubjectDialog> {
       return;
     }
 
-    if (_selectedYear == null || _selectedSemester == null) {
+    // 학년/학기는 현재 선택된 학기에서 자동으로 설정됨
+    if (widget.subject == null &&
+        (widget.year == null || widget.semester == null)) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('학년과 학기를 선택해주세요')));
-      return;
-    }
-
-    if (_selectedYear == null || _selectedSemester == null) {
+      ).showSnackBar(const SnackBar(content: Text('학기를 선택해주세요')));
       return;
     }
 
@@ -1625,8 +1652,8 @@ class _SubjectDialogState extends State<SubjectDialog> {
       name: _nameController.text.trim(),
       credits: credits,
       grade: _selectedGrade,
-      year: _selectedYear!,
-      semester: _selectedSemester!,
+      year: widget.subject?.year ?? widget.year!,
+      semester: widget.subject?.semester ?? widget.semester!,
     );
 
     Navigator.of(context).pop(subject);
