@@ -35,6 +35,7 @@ class _PlannerScreenState extends State<PlannerScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('학습 플래너'),
         bottom: TabBar(
