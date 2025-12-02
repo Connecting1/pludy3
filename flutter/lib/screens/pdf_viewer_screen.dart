@@ -187,11 +187,11 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.pdfFile.originalFilename, overflow: TextOverflow.ellipsis),
-        backgroundColor: isDark ? Colors.black : Colors.white,
-        foregroundColor: isDark ? Colors.white : Colors.black,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
         elevation: 1,
         iconTheme: IconThemeData(
-          color: isDark ? Colors.white : Colors.black,
+          color: Colors.white,
         ),
         actions: [
           if (_selectedText != null && _selectedText!.isNotEmpty)
