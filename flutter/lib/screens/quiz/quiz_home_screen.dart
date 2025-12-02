@@ -200,25 +200,69 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                     label: Text('삭제 (${_selectedQuizIds.length})'),
                   )
                   : null
-              : FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => QuizCreateScreen(),
+              : quizzes.isEmpty
+              ? null
+              : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 130,
+                    child: FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => QuizCreateScreen(),
+                          ),
+                        ).then((_) => _loadQuizzes());
+                      },
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      icon: Icon(Icons.edit, size: 18),
+                      label: Text(
+                        '수동 추가',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      extendedPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      heroTag: 'manual_quiz',
                     ),
-                  ).then((_) => _loadQuizzes());
-                },
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                icon: Icon(Icons.edit, size: 18),
-                label: Text(
-                  '수동 추가',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
                   ),
-                ),
+                  SizedBox(height: 12),
+                  SizedBox(
+                    width: 130,
+                    child: FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AIQuizGenerateScreen(),
+                          ),
+                        ).then((_) => _loadQuizzes());
+                      },
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      icon: Icon(Icons.auto_awesome, size: 18),
+                      label: Text(
+                        'AI 생성',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      extendedPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      heroTag: 'ai_quiz',
+                    ),
+                  ),
+                ],
               ),
     );
   }

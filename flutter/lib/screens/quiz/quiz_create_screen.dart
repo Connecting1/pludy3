@@ -150,11 +150,14 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('퀴즈 만들기'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
         actions: [
           // AI 생성 버튼 추가!
           IconButton(
@@ -183,12 +186,24 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
             // 퀴즈 제목
             TextFormField(
               controller: _quizNameController,
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 labelText: '퀴즈 제목',
+                labelStyle: TextStyle(color: colorScheme.secondary),
                 hintText: '예: 영어 단어 퀴즈',
-                prefixIcon: Icon(Icons.title),
+                hintStyle: TextStyle(color: colorScheme.outline),
+                prefixIcon: Icon(Icons.title, color: colorScheme.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
                 ),
               ),
               validator: (value) {
@@ -213,11 +228,14 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
             // 질문 추가 버튼
             OutlinedButton.icon(
               onPressed: _addQuestion,
-              icon: Icon(Icons.add),
-              label: Text('질문 추가'),
+              icon: Icon(Icons.add, color: colorScheme.primary),
+              label: Text('질문 추가', style: TextStyle(color: colorScheme.primary)),
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(color: Colors.blue),
+                side: BorderSide(color: colorScheme.primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
 
@@ -227,7 +245,8 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
             ElevatedButton(
               onPressed: _isSubmitting ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -239,7 +258,7 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: colorScheme.onPrimary,
                           strokeWidth: 2,
                         ),
                       )
@@ -248,7 +267,6 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
                         ),
                       ),
             ),
@@ -259,10 +277,16 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
   }
 
   Widget _buildQuestionCard(int index, QuestionFormData question) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       elevation: 2,
       margin: EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorScheme.outline),
+      ),
       child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -274,13 +298,19 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
               children: [
                 Text(
                   '질문 ${index + 1}',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
                 Row(
                   children: [
                     // 문제 유형 선택
                     DropdownButton<QuestionType>(
                       value: question.questionType,
+                      dropdownColor: colorScheme.surface,
+                      style: TextStyle(color: colorScheme.onSurface),
                       items: [
                         DropdownMenuItem(
                           value: QuestionType.multipleChoice,
@@ -301,7 +331,7 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
                     // 삭제 버튼
                     if (_questions.length > 1)
                       IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
+                        icon: Icon(Icons.delete, color: colorScheme.error),
                         onPressed: () => _removeQuestion(index),
                       ),
                   ],
@@ -314,11 +344,23 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
             // 질문
             TextFormField(
               controller: question.questionController,
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 labelText: '질문',
+                labelStyle: TextStyle(color: colorScheme.secondary),
                 hintText: '질문을 입력하세요',
+                hintStyle: TextStyle(color: colorScheme.outline),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: colorScheme.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
                 ),
               ),
               maxLines: 2,
@@ -344,6 +386,8 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
   }
 
   Widget _buildMultipleChoiceAnswers(QuestionFormData question) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -352,7 +396,7 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: Colors.grey.shade700,
+            color: colorScheme.secondary,
           ),
         ),
         SizedBox(height: 8),
@@ -371,6 +415,7 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
                 Radio<int>(
                   value: index,
                   groupValue: question.correctAnswerIndex,
+                  activeColor: colorScheme.primary,
                   onChanged: (value) {
                     setState(() {
                       question.correctAnswerIndex = value!;
@@ -380,10 +425,21 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: controllers[index],
+                    style: TextStyle(color: colorScheme.onSurface),
                     decoration: InputDecoration(
                       hintText: '선택지 ${index + 1}',
+                      hintStyle: TextStyle(color: colorScheme.outline),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: colorScheme.outline),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: colorScheme.outline),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: colorScheme.primary, width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -403,12 +459,28 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
   }
 
   Widget _buildShortAnswer(QuestionFormData question) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return TextFormField(
       controller: question.shortAnswerController,
+      style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: '정답',
+        labelStyle: TextStyle(color: colorScheme.secondary),
         hintText: '정답을 입력하세요',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        hintStyle: TextStyle(color: colorScheme.outline),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: colorScheme.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
