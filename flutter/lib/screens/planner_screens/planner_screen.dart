@@ -123,80 +123,85 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 화면 높이에 맞게 캘린더 크기 조절
-        final availableHeight = constraints.maxHeight;
-        final calendarHeight = availableHeight * 0.5; // 화면의 50%를 캘린더에 할당
-        final rowHeight = (calendarHeight - 100) / 6; // 6주 표시 (헤더 제외)
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        viewInsets: EdgeInsets.zero,
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // 화면 높이에 맞게 캘린더 크기 조절
+          final availableHeight = constraints.maxHeight;
+          final calendarHeight = availableHeight * 0.5; // 화면의 50%를 캘린더에 할당
+          final rowHeight = (calendarHeight - 100) / 6; // 6주 표시 (헤더 제외)
 
-        return Column(
-          children: [
-            // 캘린더 위젯
-            TableCalendar<Schedule>(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              eventLoader: (day) {
-                final date = DateTime(day.year, day.month, day.day);
-                return _allSchedulesMap[date] ?? [];
-              },
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-                // 선택한 날짜의 일정 로드
-                _loadSchedules();
-              },
-              calendarFormat: CalendarFormat.month,
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              daysOfWeekHeight: 40, // 요일 헤더 높이
-              rowHeight: rowHeight.clamp(40.0, 60.0), // 날짜 셀 높이 (최소 40, 최대 60)
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-              ),
-              calendarStyle: CalendarStyle(
-                markerDecoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                todayDecoration: BoxDecoration(
-                  color: Colors.blue.shade100,
-                  shape: BoxShape.circle,
-                ),
-                selectedDecoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              calendarBuilders: CalendarBuilders(
-                markerBuilder: (context, date, events) {
-                  if (events.isNotEmpty) {
-                    return Positioned(
-                      bottom: 1,
-                      child: Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    );
-                  }
-                  return null;
+          return Column(
+            children: [
+              // 캘린더 위젯
+              TableCalendar<Schedule>(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                eventLoader: (day) {
+                  final date = DateTime(day.year, day.month, day.day);
+                  return _allSchedulesMap[date] ?? [];
                 },
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  // 선택한 날짜의 일정 로드
+                  _loadSchedules();
+                },
+                calendarFormat: CalendarFormat.month,
+                startingDayOfWeek: StartingDayOfWeek.monday,
+                daysOfWeekHeight: 40, // 요일 헤더 높이
+                rowHeight: rowHeight.clamp(40.0, 60.0), // 날짜 셀 높이 (최소 40, 최대 60)
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+                calendarStyle: CalendarStyle(
+                  markerDecoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: Colors.blue.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                calendarBuilders: CalendarBuilders(
+                  markerBuilder: (context, date, events) {
+                    if (events.isNotEmpty) {
+                      return Positioned(
+                        bottom: 1,
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      );
+                    }
+                    return null;
+                  },
+                ),
               ),
-            ),
-            const Divider(),
-            // 선택한 날짜의 일정 목록
-            Expanded(child: _buildScheduleList()),
-          ],
-        );
-      },
+              const Divider(),
+              // 선택한 날짜의 일정 목록
+              Expanded(child: _buildScheduleList()),
+            ],
+          );
+        },
+      ),
     );
   }
 
