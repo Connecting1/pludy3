@@ -1,4 +1,5 @@
 // lib/screens/auth.screens.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -19,8 +20,41 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  // 타이핑 애니메이션 관련
+  final String _fullText = '학습을 시작하세요';
+  String _displayedText = '';
+  Timer? _typingTimer;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // 화면 전환 애니메이션이 완료된 후 타이핑 애니메이션 시작
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _startTypingAnimation();
+        }
+      });
+    });
+  }
+
+  void _startTypingAnimation() {
+    _typingTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (_currentIndex < _fullText.length) {
+        setState(() {
+          _currentIndex++;
+          _displayedText = _fullText.substring(0, _currentIndex);
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _typingTimer?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -94,10 +128,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '학습을 시작하세요',
+                    _displayedText,
                     style: Theme.of(
                       context,
-                    ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+                    ).textTheme.bodyLarge?.copyWith(
+                      color: Colors.grey[600],
+                      fontSize: 17,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
