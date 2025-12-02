@@ -35,6 +35,7 @@ class _PlannerScreenState extends State<PlannerScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('학습 플래너'),
         bottom: TabBar(
@@ -122,8 +123,12 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        viewInsets: EdgeInsets.zero,
+      ),
+      child: CustomScrollView(
+        slivers: [
         // 캘린더 위젯
         SliverToBoxAdapter(
           child: TableCalendar<Schedule>(
@@ -189,6 +194,7 @@ class _CalendarViewState extends State<CalendarView> {
         // 선택한 날짜의 일정 목록
         ..._buildScheduleListSlivers(),
       ],
+      ),
     );
   }
 
