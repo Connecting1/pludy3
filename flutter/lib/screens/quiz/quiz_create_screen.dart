@@ -56,10 +56,12 @@ class _QuizCreateScreenState extends State<QuizCreateScreen> {
       );
 
       if (result != null && result.files.first.bytes != null) {
-        setState(() {
-          question.imageBytes = result.files.first.bytes;
-          question.imageName = result.files.first.name;
-        });
+        if (mounted) {
+          setState(() {
+            question.imageBytes = result.files.first.bytes;
+            question.imageName = result.files.first.name;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
