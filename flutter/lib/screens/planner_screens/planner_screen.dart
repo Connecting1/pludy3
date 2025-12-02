@@ -45,8 +45,8 @@ class _PlannerScreenState extends State<PlannerScreen>
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white,
           indicatorColor: Colors.white,
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          unselectedLabelStyle: const TextStyle(fontSize: 14),
+          labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontSize: 13),
           tabs: const [
             Tab(icon: Icon(Icons.calendar_today, size: 22, color: Colors.white), text: '캘린더'),
             Tab(icon: Icon(Icons.schedule, size: 22, color: Colors.white), text: '시간표'),
@@ -208,7 +208,7 @@ class _CalendarViewState extends State<CalendarView> {
       children: [
         // 헤더와 추가 버튼
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
