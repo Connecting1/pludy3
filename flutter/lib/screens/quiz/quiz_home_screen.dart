@@ -208,13 +208,16 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                     SizedBox(
                       width: 130,
                       child: FloatingActionButton.extended(
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => QuizCreateScreen(),
                             ),
-                          ).then((_) => _loadQuizzes());
+                          );
+                          if (mounted) {
+                            _loadQuizzes();
+                          }
                         },
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
@@ -239,13 +242,16 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                   SizedBox(
                     width: 130,
                     child: FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => AIQuizGenerateScreen(),
                           ),
-                        ).then((_) => _loadQuizzes());
+                        );
+                        if (mounted) {
+                          _loadQuizzes();
+                        }
                       },
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
@@ -300,11 +306,14 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
           ),
           SizedBox(height: 20),
           OutlinedButton.icon(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => QuizCreateScreen()),
-              ).then((_) => _loadQuizzes());
+              );
+              if (mounted) {
+                _loadQuizzes();
+              }
             },
             style: OutlinedButton.styleFrom(
               foregroundColor: colorScheme.onSurface,
@@ -327,16 +336,19 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () {
+        onTap: () async {
           if (_isSelectionMode) {
             _toggleQuizSelection(quiz.id!);
           } else {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => QuizPlayScreen(quiz: quiz),
               ),
-            ).then((_) => _loadQuizzes());
+            );
+            if (mounted) {
+              _loadQuizzes();
+            }
           }
         },
         borderRadius: BorderRadius.circular(12),
@@ -389,14 +401,17 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                       children: [
                         IconButton(
                           icon: Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            Navigator.push(
+                          onPressed: () async {
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder:
                                     (context) => QuizEditScreen(quiz: quiz),
                               ),
-                            ).then((_) => _loadQuizzes());
+                            );
+                            if (mounted) {
+                              _loadQuizzes();
+                            }
                           },
                         ),
                         IconButton(
