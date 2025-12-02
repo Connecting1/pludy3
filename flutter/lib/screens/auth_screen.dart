@@ -1,6 +1,7 @@
 // lib/screens/auth.screens.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth.dart';
 import '../providers/user_provider.dart';
 
@@ -66,6 +67,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -77,14 +80,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 앱 타이틀
-                  Text(
-                    'Pludy',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                  // 앱 로고
+                  Center(
+                    child: SvgPicture.asset(
+                      'assets/images/logo.svg',
+                      width: 100,
+                      height: 100,
+                      colorFilter: ColorFilter.mode(
+                        brightness == Brightness.dark ? Colors.white : Colors.black,
+                        BlendMode.srcIn,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
