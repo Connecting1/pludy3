@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/theme_provider.dart';
 import 'auth_screen.dart';
+import './privacy_policy_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -32,26 +33,78 @@ class SettingsScreen extends StatelessWidget {
 
           Divider(),
 
+          // 개인정보 보호 정책
+          ListTile(
+            leading: Icon(Icons.privacy_tip_outlined),
+            title: Text('개인정보 보호 정책'),
+            subtitle: Text('개인정보 처리 방침을 확인하세요'),
+            trailing: Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PrivacyPolicyScreen(),
+                ),
+              );
+            },
+          ),
+
+          Divider(),
+
           // 로그아웃
           ListTile(
             leading: Icon(Icons.logout),
             title: Text('로그아웃'),
             onTap: () async {
-              await userProvider.logout();
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                  (route) => false,
-                );
+              // 로그아웃 확인 다이얼로그 추가
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: colorScheme.surface,
+                  title: Text('로그아웃', style: TextStyle(color: colorScheme.onSurface)),
+                  content: Text(
+                    '정말 로그아웃 하시겠습니까?',
+                    style: TextStyle(color: colorScheme.onSurface),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text('취소', style: TextStyle(color: Colors.grey)),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text('로그아웃', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true) {
+                await userProvider.logout();
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                    (route) => false,
+                  );
+                }
               }
             },
           ),
+
+          Divider(),
 
           // 계정 삭제 (빨간색 유지)
           ListTile(
             leading: Icon(Icons.delete_forever, color: colorScheme.error),
             title: Text('계정 삭제', style: TextStyle(color: colorScheme.error)),
+            subtitle: Text(
+              '계정을 영구적으로 삭제합니다',
+              style: TextStyle(
+                color: colorScheme.error.withOpacity(0.7),
+                fontSize: 12,
+              ),
+            ),
             onTap: () async {
               // 확인 다이얼로그 표시
               final shouldDelete = await showDialog<bool>(
@@ -108,6 +161,33 @@ class SettingsScreen extends StatelessWidget {
                 }
               }
             },
+          ),
+
+          SizedBox(height: 20),
+
+          // 앱 정보
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              children: [
+                Text(
+                  'Waylo Quiz App',
+                  style: TextStyle(
+                    color: colorScheme.secondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Version 1.0.0',
+                  style: TextStyle(
+                    color: colorScheme.secondary.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
