@@ -169,29 +169,6 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
               onPressed: _toggleSelectionMode,
               tooltip: '선택',
             ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: colorScheme.primary,
-                  child: Text(
-                    userProvider.username?.substring(0, 1).toUpperCase() ?? 'U',
-                    style: TextStyle(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8),
-                Text(
-                  userProvider.username ?? '사용자',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
       body:
@@ -223,67 +200,25 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
                     label: Text('삭제 (${_selectedQuizIds.length})'),
                   )
                   : null
-              : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 130,
-                    child: FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QuizCreateScreen(),
-                          ),
-                        ).then((_) => _loadQuizzes());
-                      },
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      icon: Icon(Icons.edit, size: 18),
-                      label: Text(
-                        '수동 추가',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      extendedPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      heroTag: 'manual_quiz',
+              : FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => QuizCreateScreen(),
                     ),
+                  ).then((_) => _loadQuizzes());
+                },
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                icon: Icon(Icons.edit, size: 18),
+                label: Text(
+                  '수동 추가',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
                   ),
-                  SizedBox(height: 12),
-                  SizedBox(
-                    width: 130,
-                    child: FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AIQuizGenerateScreen(),
-                          ),
-                        ).then((_) => _loadQuizzes());
-                      },
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      icon: Icon(Icons.auto_awesome, size: 18),
-                      label: Text(
-                        'AI 생성',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      extendedPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      heroTag: 'ai_quiz',
-                    ),
-                  ),
-                ],
+                ),
               ),
     );
   }
@@ -318,45 +253,21 @@ class _QuizHomeScreenState extends State<QuizHomeScreen> {
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
           SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => QuizCreateScreen()),
-                  ).then((_) => _loadQuizzes());
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.onSurface,
-                  side: BorderSide(color: colorScheme.onSurface),
-                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  minimumSize: Size(120, 40),
-                ),
-                icon: Icon(Icons.edit, size: 18),
-                label: Text('수동 추가', style: TextStyle(fontSize: 14)),
-              ),
-              SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AIQuizGenerateScreen(),
-                    ),
-                  ).then((_) => _loadQuizzes());
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.onSurface,
-                  side: BorderSide(color: colorScheme.onSurface),
-                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  minimumSize: Size(120, 40),
-                ),
-                icon: Icon(Icons.auto_awesome, size: 18),
-                label: Text('AI 생성', style: TextStyle(fontSize: 14)),
-              ),
-            ],
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => QuizCreateScreen()),
+              ).then((_) => _loadQuizzes());
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: colorScheme.onSurface,
+              side: BorderSide(color: colorScheme.onSurface),
+              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              minimumSize: Size(120, 40),
+            ),
+            icon: Icon(Icons.add, size: 18),
+            label: Text('만들기', style: TextStyle(fontSize: 14)),
           ),
         ],
       ),

@@ -1934,8 +1934,7 @@ async def create_quiz(
             question_text=q_data.question_text,
             question_type=q_data.question_type,
             question_order=q_data.question_order,
-            correct_answer=q_data.correct_answer,
-            image_data=q_data.image_data
+            correct_answer=q_data.correct_answer
         )
         db.add(new_question)
         db.flush()
