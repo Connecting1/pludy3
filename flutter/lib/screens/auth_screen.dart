@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       context,
                     ).textTheme.bodyLarge?.copyWith(
                       color: Colors.grey[600],
-                      fontSize: 17,
+                      fontSize: 20,
                     ),
                     textAlign: TextAlign.center,
                   ),
