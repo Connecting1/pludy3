@@ -760,6 +760,7 @@ class QuizQuestionResponse(BaseModel):
     question_type: str
     question_order: int
     correct_answer: Optional[str] = None
+    image_data: Optional[str] = None
     answers: List[QuizAnswerResponse] = []
 
     class Config:
@@ -1934,7 +1935,8 @@ async def create_quiz(
             question_text=q_data.question_text,
             question_type=q_data.question_type,
             question_order=q_data.question_order,
-            correct_answer=q_data.correct_answer
+            correct_answer=q_data.correct_answer,
+            image_data=q_data.image_data
         )
         db.add(new_question)
         db.flush()
